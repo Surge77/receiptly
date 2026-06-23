@@ -11,7 +11,8 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   collectCoverageFrom: ['src/services/**/*.ts', 'src/lib/**/*.ts'],
-  coveragePathIgnorePatterns: ['src/services/ocr-service.ts'],
+  // Native-module wrappers (ML Kit, image manipulator) can't run in Node.
+  coveragePathIgnorePatterns: ['src/services/ocr-service.ts', 'src/services/image.ts'],
   coverageThreshold: {
     'src/lib/**/*.ts': { lines: 80 },
     'src/services/receipt-parser.ts': { lines: 100, functions: 100 },

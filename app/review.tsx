@@ -9,10 +9,11 @@ import {
   View,
 } from 'react-native';
 
-import { isoDateToEpochMs, todayIso } from '@/lib/date';
-import { minorToRupees, parseAmountToMinor } from '@/lib/money';
-import { categorize } from '@/services/category-rules';
-import { parse } from '@/services/receipt-parser';
+import {
+  buildExpenseFromForm,
+  isFormSavable,
+  parsedToInitialForm,
+} from '@/services/expense-draft';
 import { useExpenseStore } from '@/state/expense-store';
 
 export default function ReviewScreen() {
@@ -20,35 +21,25 @@ export default function ReviewScreen() {
   const rawText = params.rawText ?? '';
   const { categories, addExpense, loadCategories } = useExpenseStore();
 
-  const parsed = useMemo(() => parse(rawText), [rawText]);
+  const initial = useMemo(() => parsedToInitialForm(rawText), [rawText]);
 
-  const [amount, setAmount] = useState(() =>
-    parsed.amountMinor !== null ? String(minorToRupees(parsed.amountMinor)) : '',
-  );
-  const [date, setDate] = useState(parsed.date ?? todayIso());
-  const [merchant, setMerchant] = useState(parsed.merchant ?? '');
-  const [note, setNote] = useState('');
-  const [categoryName, setCategoryName] = useState(categorize(parsed.merchant));
+  const [amount, setAmount] = useState(initial.amount);
+  const [date, setDate] = useState(initial.date);
+  const [merchant, setMerchant] = useState(initial.merchant);
+  const [note, setNote] = useState(initial.note);
+  const [categoryName, setCategoryName] = useState(initial.categoryName);
 
   useEffect(() => {
     void loadCategories();
   }, [loadCategories]);
 
-  const amountMinor = parseAmountToMinor(amount);
-  const canSave = amountMinor !== null && amountMinor > 0;
+  const form = { amount, date, merchant, note, categoryName };
+  const canSave = isFormSavable(form);
 
   async function onSave() {
-    if (amountMinor === null) return;
-    const category = categories.find((c) => c.name === categoryName);
-    await addExpense({
-      amountMinor,
-      merchant: merchant.trim() || null,
-      categoryId: category?.id ?? null,
-      spentAt: isoDateToEpochMs(date),
-      note: note.trim() || null,
-      imageUri: params.imageUri ?? null,
-      rawOcrText: rawText || null,
-    });
+    const draft = buildExpenseFromForm(form, categories, params.imageUri ?? null, rawText);
+    if (!draft) return;
+    await addExpense(draft);
     router.replace('/');
   }
 

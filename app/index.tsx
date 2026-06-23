@@ -2,19 +2,22 @@ import { Link, useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { CategoryPieChart } from '@/components/category-pie-chart';
 import { monthKey } from '@/lib/date';
 import { formatINR } from '@/lib/money';
 import { useExpenseStore } from '@/state/expense-store';
 
 export default function DashboardScreen() {
-  const { expenses, monthTotals, loadExpenses, loadMonth } = useExpenseStore();
+  const { expenses, monthTotals, categories, loadExpenses, loadMonth, loadCategories } =
+    useExpenseStore();
 
   useFocusEffect(
     useCallback(() => {
       const thisMonth = monthKey(Date.now());
+      void loadCategories();
       void loadExpenses({ month: thisMonth });
       void loadMonth(thisMonth);
-    }, [loadExpenses, loadMonth]),
+    }, [loadCategories, loadExpenses, loadMonth]),
   );
 
   const monthTotal = monthTotals.reduce((sum, t) => sum + t.totalMinor, 0);
@@ -30,12 +33,7 @@ export default function DashboardScreen() {
       {monthTotals.length === 0 ? (
         <Text style={styles.empty}>No spending recorded yet.</Text>
       ) : (
-        monthTotals.map((t) => (
-          <View key={t.categoryId ?? 'uncategorized'} style={styles.row}>
-            <Text style={styles.rowLabel}>{t.categoryName ?? 'Uncategorized'}</Text>
-            <Text style={styles.rowValue}>{formatINR(t.totalMinor)}</Text>
-          </View>
-        ))
+        <CategoryPieChart totals={monthTotals} categories={categories} />
       )}
 
       <Text style={styles.sectionTitle}>Recent</Text>
