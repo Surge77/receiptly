@@ -9,7 +9,9 @@
 Manual expense entry is tedious, so people stop. Receiptly removes the typing: snap a receipt → on-device ML Kit OCR reads it → a parser extracts amount, date, and merchant → you confirm and it's logged. Everything stays on your phone.
 
 ## Status
-🚧 **Greenfield.** This repo currently holds the [production plan](PLAN.md) and project governance. App scaffolding starts at **Phase 0** in the plan.
+🟢 **Core engine working.** Phases 0–2 implemented and verified headlessly; capture/review/dashboard UI is wired and awaits on-device verification. Full gate (`lint + typecheck + test`) is green with 59 tests.
+
+**Parser amount-extraction accuracy: 91.7%** on the labeled OCR fixture set (target ≥85%). See [PLAN.md → CURRENT IMPLEMENTATION](PLAN.md) for the phase-by-phase breakdown.
 
 ## Stack
 Expo (dev build) · React Native · TypeScript · Expo Router · expo-camera · ML Kit Text Recognition (on-device) · expo-sqlite + Drizzle ORM · Zustand · gifted-charts · Jest + React Native Testing Library · Maestro (E2E) · EAS Build.
@@ -20,10 +22,10 @@ Expo (dev build) · React Native · TypeScript · Expo Router · expo-camera · 
 **Prerequisites:** Node LTS, a physical Android phone (USB debugging) or emulator, a free [Expo/EAS](https://expo.dev) account. **Android Studio is optional** (only for an emulator — a real phone + EAS Build is enough).
 
 ```bash
-# Phase 0 (bootstrap) — see PLAN.md
-npx create-expo-app@latest .        # TypeScript template, in this folder
 npm install
-npx expo start                      # scan QR with the dev client on your phone
+npm run db:generate                 # regenerate Drizzle migrations if schema changed
+npx eas build --profile development --platform android   # one-time: build the dev client
+npm start                           # expo start --dev-client; open on your phone
 ```
 
 ## Scripts (target, available after Phase 0)

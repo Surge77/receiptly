@@ -155,7 +155,14 @@ interface ExpenseRepository {
 - No secrets in the repo (none needed — fully on-device).
 
 ## CURRENT IMPLEMENTATION
-**Greenfield.** Empty repo with governance + CI scaffolding only (this plan, README, LICENSE, SECURITY, CODE_OF_CONDUCT, CONTRIBUTING, MAINTENANCE, issue/PR templates, CI). App code begins at Phase 0 below.
+Scaffolded on **Expo SDK 56** (React Native 0.85, React 19, TypeScript strict). Implemented so far:
+- **Phase 0 — Bootstrap:** project config (Expo Router, ESLint flat + Prettier, Jest via `jest-expo`, EAS profiles in `eas.json`). Device dev-build verification still pending (needs a physical Android phone).
+- **Phase 1 — Data layer:** Drizzle schema (`src/db/schema.ts`) + generated migration, `seedCategories`, and a driver-injected `ExpenseRepository`. CRUD + `monthlyByCategory` + filters are tested **headlessly** against real SQLite (`better-sqlite3`) — 11 passing repo tests.
+- **Phase 2 — Parser:** pure `ReceiptParser` + `CategoryRules` with a labeled OCR fixture set. **Amount-extraction accuracy: 91.7%** (target ≥85%); 100% line coverage on both pure modules.
+- **Phases 3–5 (wired, device-pending):** camera capture + ML Kit OCR (`src/services/ocr-service.ts`, `app/capture.tsx`), review/edit + category picker (`app/review.tsx`), dashboard + history + detail screens, Zustand store. These typecheck and lint clean but await on-device verification (camera, ML Kit, expo-sqlite are native).
+
+**Gate status:** `npm run lint && npm run typecheck && npm test` all green (59 tests).
+**Remaining:** on-device OCR verification (Phase 3), dashboard category chart via gifted-charts (Phase 5), a11y/error-boundary polish + Maestro run (Phase 6), CI/EAS release (Phase 7).
 
 ## SECURITY REQUIREMENTS
 - No API keys, tokens, or secrets — nothing to leak.
