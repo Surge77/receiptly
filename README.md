@@ -13,7 +13,9 @@ Manual expense entry is tedious, so people stop. Receiptly removes the typing: s
 
 **Parser amount-extraction accuracy: 96.2%** on the labeled OCR fixture set (target ≥85%).
 
-**Still needs a physical Android phone:** on-device ML Kit OCR on real receipts (Phase 3), Maestro E2E run (Phase 6), and the EAS release build / installable APK / `v0.1.0` tag (Phase 7). See [PLAN.md → CURRENT IMPLEMENTATION](PLAN.md) for the full breakdown.
+An **EAS development APK has been built successfully** (Android, SDK 56 — full native graph compiled in the cloud), so Phase 0/7 build artifacts exist. Beyond the core phases, the app also has gallery import, CSV export, edit-expense, history month/category filters, and user-addable categories.
+
+**Still needs a physical Android phone:** running that APK for on-device ML Kit OCR accuracy on real receipts (Phase 3) and a Maestro E2E run (Phase 6). See [PLAN.md → CURRENT IMPLEMENTATION](PLAN.md) for the on-device QA checklist.
 
 ## Stack
 Expo (dev build) · React Native · TypeScript · Expo Router · expo-camera · ML Kit Text Recognition (on-device) · expo-sqlite + Drizzle ORM · Zustand · gifted-charts · Jest + React Native Testing Library · Maestro (E2E) · EAS Build.

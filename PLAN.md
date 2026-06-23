@@ -156,13 +156,26 @@ interface ExpenseRepository {
 
 ## CURRENT IMPLEMENTATION
 Scaffolded on **Expo SDK 56** (React Native 0.85, React 19, TypeScript strict). Implemented so far:
-- **Phase 0 — Bootstrap:** ✅ code-side done (Expo Router, ESLint flat + Prettier, Jest, EAS profiles in `eas.json`, CI on Node 24). ⏳ on-device dev-build run still pending (needs a physical Android phone).
+- **Phase 0 — Bootstrap:** ✅ done. Expo Router, ESLint flat + Prettier, Jest, EAS profiles, CI on Node 24, **and a successful EAS cloud dev build** (Android APK, SDK 56 — full native graph compiled). ⏳ only running that APK on a physical phone remains.
 - **Phase 1 — Data layer:** ✅ Drizzle schema + generated migration, `seedCategories`, driver-injected `ExpenseRepository`. CRUD + `monthlyByCategory` + filters tested **headlessly** against real SQLite (`better-sqlite3`).
 - **Phase 2 — Parser:** ✅ pure `ReceiptParser` + `CategoryRules` + labeled OCR fixtures. **Amount accuracy 96.2%** (target ≥85%); 100% line coverage.
 - **Phase 4 — Review→Save:** ✅ logic complete: review-screen form logic extracted to a pure `expense-draft` module (prefill, validation, draft-build) and unit-tested headlessly; repository persistence tested. ⏳ RNTL *rendering* tests deferred (see toolchain note) and on-device save unverified.
 - **Phase 5 — Dashboard & History:** ✅ month total, **category pie chart** (`react-native-gifted-charts`, pure `toPieSlices` mapper + tests), history filter/search with tested query layer. ⏳ on-device visual check pending.
 - **Phase 6 — Polish:** ✅ a11y labels, empty/error states, app-wide error boundary, image compression (≤1600px before OCR/storage). ⏳ Maestro E2E run needs an emulator/device.
-- **Phases 3 & 7 — device/EAS-gated:** camera + ML Kit OCR wired (`app/capture.tsx`, `src/services/ocr-service.ts`) but unrunnable without hardware; EAS release build / APK / `v0.1.0` tag need an EAS account + device.
+- **Phase 7 — Build/CI:** ✅ CI green on every commit; **EAS development APK built successfully** (installable artifact exists). ⏳ release AAB + `v0.1.0` tag are a follow-up once on-device QA passes.
+- **Phase 3 — Camera + OCR:** camera + gallery import + ML Kit OCR wired (`app/capture.tsx`, `src/services/ocr-service.ts`). ⏳ true OCR accuracy on photographed receipts needs the APK on a real phone — the one thing no emulator/CI can validate.
+
+**Extra features beyond the original phase list (device-independent, shipped):** gallery import, CSV export, edit-expense, history month/category filters, user-addable categories + Settings.
+
+### On-device QA checklist (run after installing the APK)
+1. Install the EAS dev-build APK on an Android phone; run `npx expo start --dev-client` and open the app.
+2. Grant camera permission → snap a clearly-printed receipt → confirm Review shows a parsed amount + date within ~2.5 s.
+3. Pick an existing receipt photo from gallery → same Review prefill.
+4. Edit the amount/category → Save → appears on dashboard; month total + pie chart update.
+5. History: filter by month, by category, and text search; Export CSV opens the share sheet.
+6. Add a custom category in Settings → it appears in the Review picker.
+7. Edit then delete an expense → changes persist after force-closing/reopening (airplane mode on).
+8. Record real-receipt amount-extraction accuracy across ≥10 receipts on ≥2 phones — the headline metric the fixtures only approximate.
 
 **Gate status:** `npm run lint && npm run typecheck && npm test` all green (**80 tests**, 100% lines on covered modules) — verified in GitHub Actions CI on Node 24. Android JS bundle (`expo export`) verified clean.
 **Test toolchain note:** all current suites are pure logic + SQLite, run under **ts-jest** (Node) — no React Native test stack. `jest-expo` + React Native Testing Library will return for component *rendering* tests; they are intentionally absent because RNTL v14's `test-renderer@1` peer pulls a non-deterministic RN-0.86 tree that breaks strict `npm ci` on this RN-0.85/React-19 project. `.npmrc` sets `legacy-peer-deps=true` (expo-router peer-declares RNTL) to keep the lock file stable.
