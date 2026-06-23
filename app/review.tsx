@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -39,8 +40,13 @@ export default function ReviewScreen() {
   async function onSave() {
     const draft = buildExpenseFromForm(form, categories, params.imageUri ?? null, rawText);
     if (!draft) return;
-    await addExpense(draft);
-    router.replace('/');
+    try {
+      await addExpense(draft);
+      router.replace('/');
+    } catch (e) {
+      if (__DEV__) console.error('Failed to save expense', e);
+      Alert.alert('Could not save', 'Something went wrong saving this expense. Please try again.');
+    }
   }
 
   return (

@@ -131,13 +131,22 @@ function extractDate(rawText: string): { value: string | null; confidence: numbe
 function extractMerchant(lines: string[]): { value: string | null; confidence: number } {
   for (const line of lines.slice(0, 5)) {
     const lower = line.toLowerCase();
-    if (MERCHANT_STOPWORDS.some((sw) => lower.startsWith(sw))) continue;
+    if (MERCHANT_STOPWORDS.some((sw) => startsWithLabel(lower, sw))) continue;
     if (DATE_CANDIDATE.test(line)) continue;
     if (!/[a-z]{2,}/i.test(line)) continue; // needs real letters
     if (/^\d/.test(line)) continue; // skip lines starting with digits (addresses)
     return { value: line, confidence: 0.6 };
   }
   return { value: null, confidence: 0 };
+}
+
+// True when `lower` begins with stopword `sw` as a label, not merely a prefix of
+// a longer word. Guards real merchants like "PhonePe" against the "phone" stopword
+// while still catching "Phone: 123" / "Bill No 12".
+function startsWithLabel(lower: string, sw: string): boolean {
+  if (!lower.startsWith(sw)) return false;
+  const next = lower.charAt(sw.length);
+  return next === '' || !/[a-z]/.test(next);
 }
 
 // Extract the captured group of every match (RN/Hermes-safe, no matchAll dep).
