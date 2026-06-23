@@ -44,7 +44,7 @@
 - **Charts:** `react-native-gifted-charts`
 - **Dates:** `day.js`
 - **Image/files:** `expo-file-system`
-- **Unit/component tests:** Jest + React Native Testing Library (RNTL)
+- **Unit tests:** Jest — pure-logic suites run on **ts-jest** (Node); **component tests** use `jest-expo` + React Native Testing Library (RNTL), added in Phase 4
 - **E2E:** Maestro (happy-path flows on emulator/device)
 - **Build/CI:** EAS Build (cloud) + GitHub Actions (lint, typecheck, test)
 - **Lint/format:** ESLint + Prettier
@@ -161,7 +161,8 @@ Scaffolded on **Expo SDK 56** (React Native 0.85, React 19, TypeScript strict). 
 - **Phase 2 — Parser:** pure `ReceiptParser` + `CategoryRules` with a labeled OCR fixture set. **Amount-extraction accuracy: 91.7%** (target ≥85%); 100% line coverage on both pure modules.
 - **Phases 3–5 (wired, device-pending):** camera capture + ML Kit OCR (`src/services/ocr-service.ts`, `app/capture.tsx`), review/edit + category picker (`app/review.tsx`), dashboard + history + detail screens, Zustand store. These typecheck and lint clean but await on-device verification (camera, ML Kit, expo-sqlite are native).
 
-**Gate status:** `npm run lint && npm run typecheck && npm test` all green (59 tests).
+**Gate status:** `npm run lint && npm run typecheck && npm test` all green (60 tests) — verified in GitHub Actions CI on Node 24.
+**Test toolchain note:** Phase 1–2 tests are pure logic + SQLite, so they run under **ts-jest** (Node env) — no React Native test stack needed yet. `jest-expo` + React Native Testing Library are deferred to **Phase 4** (component tests). `.npmrc` sets `legacy-peer-deps=true` because `expo-router` peer-declares RNTL, whose auto-install otherwise pulls a non-deterministic RN-0.86/test-renderer tree and breaks strict `npm ci`.
 **Remaining:** on-device OCR verification (Phase 3), dashboard category chart via gifted-charts (Phase 5), a11y/error-boundary polish + Maestro run (Phase 6), CI/EAS release (Phase 7).
 
 ## SECURITY REQUIREMENTS
