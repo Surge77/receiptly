@@ -19,6 +19,7 @@ export default function ExpenseDetailScreen() {
   const [categoryName, setCategoryName] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!Number.isInteger(expenseId)) return; // malformed/absent route param
     void repo.getById(expenseId).then(async (e) => {
       setExpense(e);
       if (e?.categoryId != null) {

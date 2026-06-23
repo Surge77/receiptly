@@ -68,6 +68,15 @@ describe('ExpenseRepository', () => {
     expect(await repo.list({ search: 'cab' })).toHaveLength(1);
   });
 
+  it('treats LIKE metacharacters in search as literals', async () => {
+    const { repo } = makeRepo();
+    await repo.create(baseExpense({ merchant: '50% off store' }));
+    await repo.create(baseExpense({ merchant: 'Regular shop' }));
+    // '%' must match the literal percent, not act as a wildcard over all rows.
+    expect(await repo.list({ search: '50%' })).toHaveLength(1);
+    expect(await repo.list({ search: '%' })).toHaveLength(1);
+  });
+
   it('filters by category', async () => {
     const { repo, db } = makeRepo();
     db.insert(schema.categories).values({ name: 'Transport', color: '#3B82F6' }).run();

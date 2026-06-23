@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, like, lt, or, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, lt, or, sql } from 'drizzle-orm';
 
 import { categories, expenses } from '@/db/schema';
 import type { ExpenseRow } from '@/db/schema';
@@ -33,7 +33,8 @@ export function createExpenseRepository(db: AppDatabase): ExpenseRepository {
           rawOcrText: e.rawOcrText ?? null,
         })
         .returning();
-      return toExpense(row!);
+      if (!row) throw new Error('Insert returned no row');
+      return toExpense(row);
     },
 
     async list(filter) {
@@ -77,6 +78,8 @@ export function createExpenseRepository(db: AppDatabase): ExpenseRepository {
         .leftJoin(categories, eq(expenses.categoryId, categories.id))
         .where(and(gte(expenses.spentAt, start), lt(expenses.spentAt, end)))
         .groupBy(expenses.categoryId);
+      // sql<number> is a compile-time cast only — SUM() over zero rows is NULL
+      // at runtime, so the ?? 0 fallback is load-bearing, not cosmetic.
       return rows.map((r) => ({
         categoryId: r.categoryId,
         categoryName: r.categoryName,
@@ -97,8 +100,15 @@ function buildWhere(filter?: ExpenseFilter) {
     clauses.push(eq(expenses.categoryId, filter.categoryId));
   }
   if (filter.search) {
-    const term = `%${filter.search}%`;
-    clauses.push(or(like(expenses.merchant, term), like(expenses.note, term)));
+    // Escape LIKE metacharacters so a literal % or _ in the search text isn't
+    // treated as a wildcard; ESCAPE '\' makes the backslash the escape char.
+    const term = `%${filter.search.replace(/[\\%_]/g, '\\$&')}%`;
+    clauses.push(
+      or(
+        sql`${expenses.merchant} like ${term} escape '\\'`,
+        sql`${expenses.note} like ${term} escape '\\'`,
+      ),
+    );
   }
   return clauses.length > 0 ? and(...clauses) : undefined;
 }

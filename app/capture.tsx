@@ -29,7 +29,10 @@ export default function CaptureScreen() {
     try {
       const photo = await cameraRef.current.takePictureAsync({ quality: 0.7 });
       if (!photo) return;
-      const rawText = await mlKitOcrService.recognize(photo.uri).catch(() => '');
+      const rawText = await mlKitOcrService.recognize(photo.uri).catch((e: unknown) => {
+        if (__DEV__) console.warn('OCR failed; continuing with manual entry', e);
+        return '';
+      });
       router.replace({ pathname: '/review', params: { imageUri: photo.uri, rawText } });
     } finally {
       setBusy(false);
