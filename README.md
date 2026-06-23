@@ -9,9 +9,9 @@
 Manual expense entry is tedious, so people stop. Receiptly removes the typing: snap a receipt → on-device ML Kit OCR reads it → a parser extracts amount, date, and merchant → you confirm and it's logged. Everything stays on your phone.
 
 ## Status
-🟢 **Feature-complete except hardware-gated steps.** All device-independent work across Phases 0–6 is implemented and verified headlessly: data layer, parser, review-save logic, dashboard + pie chart, history search, image compression, a11y, error boundary. Full gate (`lint + typecheck + test`) is green with **70 tests** in CI, and the Android JS bundle builds clean.
+🟢 **Feature-complete except hardware-gated steps.** All device-independent work across Phases 0–6 is implemented and verified headlessly: data layer, parser, review-save logic, dashboard + pie chart, history search, image compression, a11y, error boundary. Full gate (`lint + typecheck + test`) is green with **80 tests** in CI, and the Android JS bundle builds clean.
 
-**Parser amount-extraction accuracy: 91.7%** on the labeled OCR fixture set (target ≥85%).
+**Parser amount-extraction accuracy: 96.2%** on the labeled OCR fixture set (target ≥85%).
 
 **Still needs a physical Android phone:** on-device ML Kit OCR on real receipts (Phase 3), Maestro E2E run (Phase 6), and the EAS release build / installable APK / `v0.1.0` tag (Phase 7). See [PLAN.md → CURRENT IMPLEMENTATION](PLAN.md) for the full breakdown.
 

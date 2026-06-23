@@ -5,7 +5,7 @@ import { join } from 'node:path';
 
 import * as schema from '@/db/schema';
 import { createExpenseRepository, type AppDatabase } from '@/services/expense-repository';
-import { isoDateToEpochMs } from '@/lib/date';
+import { isoDateToEpochMs, monthRange } from '@/lib/date';
 
 const MIGRATION = join(__dirname, '../../drizzle/0000_violet_marrow.sql');
 
@@ -117,5 +117,106 @@ describe('ExpenseRepository', () => {
     const transport = totals.find((t) => t.categoryName === 'Transport');
     expect(food?.totalMinor).toBe(25000);
     expect(transport?.totalMinor).toBe(30000);
+  });
+
+  it('returns every expense when no filter is supplied', async () => {
+    const { repo } = makeRepo();
+    await repo.create(baseExpense({ merchant: 'A' }));
+    await repo.create(baseExpense({ merchant: 'B' }));
+    await repo.create(baseExpense({ merchant: 'C' }));
+    expect(await repo.list()).toHaveLength(3);
+  });
+
+  it('returns an empty list when no expenses exist', async () => {
+    const { repo } = makeRepo();
+    expect(await repo.list()).toEqual([]);
+  });
+
+  it('applies month, category and search filters together', async () => {
+    const { repo, db } = makeRepo();
+    db.insert(schema.categories).values({ name: 'Transport', color: '#3B82F6' }).run();
+    // Target row: May + category 2 + matches search.
+    await repo.create(
+      baseExpense({ spentAt: isoDateToEpochMs('2024-05-10'), categoryId: 2, merchant: 'Uber' }),
+    );
+    // Same month + search but wrong category.
+    await repo.create(
+      baseExpense({ spentAt: isoDateToEpochMs('2024-05-11'), categoryId: 1, merchant: 'Uber' }),
+    );
+    // Right category + search but wrong month.
+    await repo.create(
+      baseExpense({ spentAt: isoDateToEpochMs('2024-06-10'), categoryId: 2, merchant: 'Uber' }),
+    );
+    // Right month + category but no search match.
+    await repo.create(
+      baseExpense({ spentAt: isoDateToEpochMs('2024-05-12'), categoryId: 2, merchant: 'Ola' }),
+    );
+
+    const result = await repo.list({ month: '2024-05', categoryId: 2, search: 'uber' });
+    expect(result).toHaveLength(1);
+    expect(result[0]?.merchant).toBe('Uber');
+  });
+
+  it('includes an expense at the exact start-of-month boundary', async () => {
+    const { repo } = makeRepo();
+    const { start } = monthRange('2024-05');
+    await repo.create(baseExpense({ spentAt: start, merchant: 'BoundaryStart' }));
+    const may = await repo.list({ month: '2024-05' });
+    expect(may.map((e) => e.merchant)).toEqual(['BoundaryStart']);
+  });
+
+  it('excludes an expense at the first ms of the next month', async () => {
+    const { repo } = makeRepo();
+    const { end } = monthRange('2024-05');
+    await repo.create(baseExpense({ spentAt: end, merchant: 'NextMonth' }));
+    expect(await repo.list({ month: '2024-05' })).toHaveLength(0);
+    // It is included in the following month instead.
+    expect(await repo.list({ month: '2024-06' })).toHaveLength(1);
+  });
+
+  it('matches search case-insensitively', async () => {
+    const { repo } = makeRepo();
+    await repo.create(baseExpense({ merchant: 'STARBUCKS' }));
+    expect(await repo.list({ search: 'starbucks' })).toHaveLength(1);
+    expect(await repo.list({ search: 'StArBuCkS' })).toHaveLength(1);
+  });
+
+  it('reports uncategorized expenses as a null-category row in monthly totals', async () => {
+    const { repo } = makeRepo();
+    await repo.create(baseExpense({ categoryId: null, amountMinor: 12000 }));
+    const totals = await repo.monthlyByCategory('2024-05');
+    const uncategorized = totals.find((t) => t.categoryId === null);
+    expect(uncategorized).toBeDefined();
+    expect(uncategorized?.categoryName).toBeNull();
+    expect(uncategorized?.totalMinor).toBe(12000);
+  });
+
+  it('returns an empty array for a month with no expenses', async () => {
+    const { repo } = makeRepo();
+    await repo.create(baseExpense({ spentAt: isoDateToEpochMs('2024-05-10') }));
+    expect(await repo.monthlyByCategory('2024-08')).toEqual([]);
+  });
+
+  it('leaves unspecified fields unchanged on a partial update', async () => {
+    const { repo } = makeRepo();
+    const created = await repo.create(
+      baseExpense({ merchant: 'Original', note: 'keep me', amountMinor: 45000 }),
+    );
+    const updated = await repo.update(created.id, { amountMinor: 99000 });
+    expect(updated.amountMinor).toBe(99000);
+    expect(updated.merchant).toBe('Original');
+    expect(updated.note).toBe('keep me');
+    expect(updated.currency).toBe('INR');
+    expect(updated.spentAt).toBe(created.spentAt);
+  });
+
+  it('breaks spentAt ties by id descending', async () => {
+    const { repo } = makeRepo();
+    const sameInstant = isoDateToEpochMs('2024-05-12');
+    const first = await repo.create(baseExpense({ spentAt: sameInstant, merchant: 'First' }));
+    const second = await repo.create(baseExpense({ spentAt: sameInstant, merchant: 'Second' }));
+    const list = await repo.list();
+    expect(list.map((e) => e.id)).toEqual([second.id, first.id]);
+    expect(list.map((e) => e.merchant)).toEqual(['Second', 'First']);
   });
 });

@@ -158,13 +158,13 @@ interface ExpenseRepository {
 Scaffolded on **Expo SDK 56** (React Native 0.85, React 19, TypeScript strict). Implemented so far:
 - **Phase 0 — Bootstrap:** ✅ code-side done (Expo Router, ESLint flat + Prettier, Jest, EAS profiles in `eas.json`, CI on Node 24). ⏳ on-device dev-build run still pending (needs a physical Android phone).
 - **Phase 1 — Data layer:** ✅ Drizzle schema + generated migration, `seedCategories`, driver-injected `ExpenseRepository`. CRUD + `monthlyByCategory` + filters tested **headlessly** against real SQLite (`better-sqlite3`).
-- **Phase 2 — Parser:** ✅ pure `ReceiptParser` + `CategoryRules` + labeled OCR fixtures. **Amount accuracy 91.7%** (target ≥85%); 100% line coverage.
+- **Phase 2 — Parser:** ✅ pure `ReceiptParser` + `CategoryRules` + labeled OCR fixtures. **Amount accuracy 96.2%** (target ≥85%); 100% line coverage.
 - **Phase 4 — Review→Save:** ✅ logic complete: review-screen form logic extracted to a pure `expense-draft` module (prefill, validation, draft-build) and unit-tested headlessly; repository persistence tested. ⏳ RNTL *rendering* tests deferred (see toolchain note) and on-device save unverified.
 - **Phase 5 — Dashboard & History:** ✅ month total, **category pie chart** (`react-native-gifted-charts`, pure `toPieSlices` mapper + tests), history filter/search with tested query layer. ⏳ on-device visual check pending.
 - **Phase 6 — Polish:** ✅ a11y labels, empty/error states, app-wide error boundary, image compression (≤1600px before OCR/storage). ⏳ Maestro E2E run needs an emulator/device.
 - **Phases 3 & 7 — device/EAS-gated:** camera + ML Kit OCR wired (`app/capture.tsx`, `src/services/ocr-service.ts`) but unrunnable without hardware; EAS release build / APK / `v0.1.0` tag need an EAS account + device.
 
-**Gate status:** `npm run lint && npm run typecheck && npm test` all green (**70 tests**, 100% lines on covered modules) — verified in GitHub Actions CI on Node 24. Android JS bundle (`expo export`) verified clean.
+**Gate status:** `npm run lint && npm run typecheck && npm test` all green (**80 tests**, 100% lines on covered modules) — verified in GitHub Actions CI on Node 24. Android JS bundle (`expo export`) verified clean.
 **Test toolchain note:** all current suites are pure logic + SQLite, run under **ts-jest** (Node) — no React Native test stack. `jest-expo` + React Native Testing Library will return for component *rendering* tests; they are intentionally absent because RNTL v14's `test-renderer@1` peer pulls a non-deterministic RN-0.86 tree that breaks strict `npm ci` on this RN-0.85/React-19 project. `.npmrc` sets `legacy-peer-deps=true` (expo-router peer-declares RNTL) to keep the lock file stable.
 **Cannot be done without hardware:** on-device OCR accuracy on real photographed receipts (Phase 3), Maestro E2E (Phase 6), installable APK + release tag (Phase 7).
 
