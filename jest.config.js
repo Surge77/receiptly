@@ -12,7 +12,11 @@ module.exports = {
   },
   collectCoverageFrom: ['src/services/**/*.ts', 'src/lib/**/*.ts'],
   // Native-module wrappers (ML Kit, image manipulator) can't run in Node.
-  coveragePathIgnorePatterns: ['src/services/ocr-service.ts', 'src/services/image.ts'],
+  coveragePathIgnorePatterns: [
+    'src/services/ocr-service.ts',
+    'src/services/image.ts',
+    'src/services/export.ts',
+  ],
   coverageThreshold: {
     'src/lib/**/*.ts': { lines: 80 },
     'src/services/receipt-parser.ts': { lines: 100, functions: 100 },

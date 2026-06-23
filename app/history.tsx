@@ -2,13 +2,22 @@ import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { toCsv } from '@/lib/csv';
 import { monthKey } from '@/lib/date';
 import { formatINR } from '@/lib/money';
+import { exportExpensesCsv } from '@/services/export';
 import { useExpenseStore } from '@/state/expense-store';
 
 export default function HistoryScreen() {
-  const { expenses, loadExpenses } = useExpenseStore();
+  const { expenses, categories, loadExpenses, loadCategories } = useExpenseStore();
   const [search, setSearch] = useState('');
+
+  const onExport = useCallback(async () => {
+    if (expenses.length === 0) return;
+    if (categories.length === 0) await loadCategories();
+    const latestCategories = useExpenseStore.getState().categories;
+    await exportExpensesCsv(toCsv(expenses, latestCategories));
+  }, [expenses, categories, loadCategories]);
 
   const reload = useCallback(
     (term: string) => {
@@ -35,6 +44,15 @@ export default function HistoryScreen() {
         style={styles.search}
         accessibilityLabel="Search expenses"
       />
+      <Pressable
+        onPress={() => void onExport()}
+        disabled={expenses.length === 0}
+        accessibilityRole="button"
+        accessibilityLabel="Export expenses to CSV"
+        style={[styles.exportButton, expenses.length === 0 && styles.exportButtonDisabled]}
+      >
+        <Text style={styles.exportButtonText}>Export CSV</Text>
+      </Pressable>
       <FlatList
         data={expenses}
         keyExtractor={(e) => String(e.id)}
@@ -78,4 +96,13 @@ const styles = StyleSheet.create({
   date: { fontSize: 13, color: '#9CA3AF', marginTop: 2 },
   amount: { fontSize: 16, fontWeight: '600' },
   empty: { color: '#9CA3AF', paddingVertical: 24, textAlign: 'center' },
+  exportButton: {
+    backgroundColor: '#2563EB',
+    borderRadius: 10,
+    paddingVertical: 10,
+    marginBottom: 12,
+    alignItems: 'center',
+  },
+  exportButtonDisabled: { backgroundColor: '#D1D5DB' },
+  exportButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
 });

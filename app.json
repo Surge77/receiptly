@@ -10,8 +10,12 @@
     "android": {
       "package": "com.tejas.receiptly",
       "edgeToEdgeEnabled": true,
-      "permissions": ["android.permission.CAMERA"],
-      "blockedPermissions": ["android.permission.RECORD_AUDIO"]
+      "permissions": [
+        "android.permission.CAMERA"
+      ],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -23,7 +27,8 @@
           "cameraPermission": "Receiptly uses the camera to photograph receipts. Images stay on your device.",
           "recordAudioAndroid": false
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true

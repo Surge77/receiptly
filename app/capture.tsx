@@ -1,4 +1,5 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -24,20 +25,38 @@ export default function CaptureScreen() {
     );
   }
 
+  async function processImage(uri: string, width: number, height: number) {
+    const imageUri = await compressForOcr(uri, width, height).catch(() => uri);
+    const rawText = await mlKitOcrService.recognize(imageUri).catch((e: unknown) => {
+      if (__DEV__) console.warn('OCR failed; continuing with manual entry', e);
+      return '';
+    });
+    router.replace({ pathname: '/review', params: { imageUri, rawText } });
+  }
+
   async function onCapture() {
     if (!cameraRef.current || busy) return;
     setBusy(true);
     try {
       const photo = await cameraRef.current.takePictureAsync({ quality: 0.7 });
       if (!photo) return;
-      const imageUri = await compressForOcr(photo.uri, photo.width, photo.height).catch(
-        () => photo.uri,
-      );
-      const rawText = await mlKitOcrService.recognize(imageUri).catch((e: unknown) => {
-        if (__DEV__) console.warn('OCR failed; continuing with manual entry', e);
-        return '';
+      await processImage(photo.uri, photo.width, photo.height);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onPickFromGallery() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 0.7,
       });
-      router.replace({ pathname: '/review', params: { imageUri, rawText } });
+      const asset = result.canceled ? undefined : result.assets[0];
+      if (!asset) return;
+      await processImage(asset.uri, asset.width, asset.height);
     } finally {
       setBusy(false);
     }
@@ -55,6 +74,15 @@ export default function CaptureScreen() {
       >
         <Text style={styles.buttonText}>{busy ? 'Reading…' : 'Capture'}</Text>
       </Pressable>
+      <Pressable
+        style={[styles.button, styles.buttonSecondary, busy && styles.buttonDisabled]}
+        onPress={onPickFromGallery}
+        disabled={busy}
+        accessibilityRole="button"
+        accessibilityLabel="Pick receipt from gallery"
+      >
+        <Text style={styles.buttonText}>Pick from gallery</Text>
+      </Pressable>
     </View>
   );
 }
@@ -70,11 +98,13 @@ const styles = StyleSheet.create({
   message: { textAlign: 'center', fontSize: 16 },
   button: {
     backgroundColor: '#2563EB',
-    margin: 16,
+    marginHorizontal: 16,
+    marginTop: 16,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
   },
+  buttonSecondary: { backgroundColor: '#475569', marginBottom: 16 },
   buttonDisabled: { opacity: 0.6 },
   buttonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
 });
