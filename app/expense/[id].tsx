@@ -59,6 +59,15 @@ export default function ExpenseDetailScreen() {
       <Detail label="Date" value={monthKey(expense.spentAt)} />
       {expense.note ? <Detail label="Note" value={expense.note} /> : null}
 
+      <Pressable
+        style={styles.edit}
+        onPress={() => router.push(`/edit/${expenseId}`)}
+        accessibilityRole="button"
+        accessibilityLabel="Edit expense"
+      >
+        <Text style={styles.editText}>Edit</Text>
+      </Pressable>
+
       <Pressable style={styles.delete} onPress={onDelete} accessibilityRole="button">
         <Text style={styles.deleteText}>Delete</Text>
       </Pressable>
@@ -89,8 +98,16 @@ const styles = StyleSheet.create({
   },
   label: { color: '#6B7280', fontSize: 15 },
   value: { fontSize: 15, fontWeight: '500' },
-  delete: {
+  edit: {
     marginTop: 'auto',
+    backgroundColor: '#2563EB',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  editText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+  delete: {
     backgroundColor: '#FEE2E2',
     borderRadius: 12,
     paddingVertical: 14,

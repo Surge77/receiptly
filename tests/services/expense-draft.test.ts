@@ -1,11 +1,12 @@
 import {
   buildExpenseFromForm,
+  expenseToForm,
   isFormSavable,
   parsedToInitialForm,
   type ReviewForm,
 } from '@/services/expense-draft';
 import { isoDateToEpochMs } from '@/lib/date';
-import type { Category } from '@/types';
+import type { Category, Expense } from '@/types';
 
 const CATEGORIES: Category[] = [
   { id: 1, name: 'Food', color: '#EF4444', createdAt: 0 },
@@ -73,5 +74,41 @@ describe('buildExpenseFromForm', () => {
 
   it('returns null for an invalid amount', () => {
     expect(buildExpenseFromForm(form({ amount: '0' }), CATEGORIES, null, '')).toBeNull();
+  });
+});
+
+describe('expenseToForm', () => {
+  const expense = (overrides: Partial<Expense> = {}): Expense => ({
+    id: 1,
+    amountMinor: 45000,
+    currency: 'INR',
+    merchant: 'Swiggy',
+    categoryId: 1,
+    spentAt: isoDateToEpochMs('2024-05-12'),
+    note: 'Lunch',
+    imageUri: null,
+    rawOcrText: null,
+    createdAt: 0,
+    ...overrides,
+  });
+
+  it('round-trips a known expense back to its form', () => {
+    const f = expenseToForm(expense(), CATEGORIES);
+    expect(f.amount).toBe('450');
+    expect(f.date).toBe('2024-05-12');
+    expect(f.merchant).toBe('Swiggy');
+    expect(f.note).toBe('Lunch');
+    expect(f.categoryName).toBe('Food');
+  });
+
+  it('maps null merchant/note to empty strings', () => {
+    const f = expenseToForm(expense({ merchant: null, note: null }), CATEGORIES);
+    expect(f.merchant).toBe('');
+    expect(f.note).toBe('');
+  });
+
+  it('falls back to Other for an unknown or null categoryId', () => {
+    expect(expenseToForm(expense({ categoryId: 999 }), CATEGORIES).categoryName).toBe('Other');
+    expect(expenseToForm(expense({ categoryId: null }), CATEGORIES).categoryName).toBe('Other');
   });
 });

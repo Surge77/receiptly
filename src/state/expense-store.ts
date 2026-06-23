@@ -1,16 +1,19 @@
 import { create } from 'zustand';
 
 import { db, schema } from '@/db/client';
+import { createCategoryRepository } from '@/services/category-repository';
 import { createExpenseRepository } from '@/services/expense-repository';
 import type { Category, CategoryTotal, Expense, ExpenseFilter, NewExpense } from '@/types';
 
 const repo = createExpenseRepository(db);
+const categoryRepo = createCategoryRepository(db);
 
 interface ExpenseState {
   expenses: Expense[];
   categories: Category[];
   monthTotals: CategoryTotal[];
   loadCategories: () => Promise<void>;
+  addCategory: (name: string, color: string) => Promise<void>;
   loadExpenses: (filter?: ExpenseFilter) => Promise<void>;
   loadMonth: (month: string) => Promise<void>;
   addExpense: (e: NewExpense) => Promise<Expense>;
@@ -26,6 +29,11 @@ export const useExpenseStore = create<ExpenseState>((set, get) => ({
   async loadCategories() {
     const rows = await db.select().from(schema.categories);
     set({ categories: rows });
+  },
+
+  async addCategory(name, color) {
+    await categoryRepo.add(name, color);
+    await get().loadCategories();
   },
 
   async loadExpenses(filter) {

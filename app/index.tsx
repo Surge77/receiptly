@@ -52,6 +52,11 @@ export default function DashboardScreen() {
       />
 
       <View style={styles.actions}>
+        <Link href="/settings" asChild>
+          <Pressable style={[styles.button, styles.buttonSecondary]} accessibilityRole="button">
+            <Text style={styles.buttonSecondaryText}>Settings</Text>
+          </Pressable>
+        </Link>
         <Link href="/history" asChild>
           <Pressable style={[styles.button, styles.buttonSecondary]} accessibilityRole="button">
             <Text style={styles.buttonSecondaryText}>History</Text>

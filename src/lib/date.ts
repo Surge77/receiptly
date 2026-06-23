@@ -49,3 +49,16 @@ export function monthRange(month: string): { start: number; end: number } {
 export function todayIso(): string {
   return dayjs().format(ISO_DATE);
 }
+
+/**
+ * Last `count` month keys in 'YYYY-MM', descending (most recent first),
+ * ending at the month containing `fromEpochMs` (default now).
+ */
+export function recentMonths(count: number, fromEpochMs?: number): string[] {
+  const end = fromEpochMs === undefined ? dayjs() : dayjs(fromEpochMs);
+  const months: string[] = [];
+  for (let i = 0; i < count; i += 1) {
+    months.push(end.subtract(i, 'month').format(MONTH_KEY));
+  }
+  return months;
+}

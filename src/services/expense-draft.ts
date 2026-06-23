@@ -1,8 +1,13 @@
+import dayjs from 'dayjs';
+
 import { isoDateToEpochMs, todayIso } from '@/lib/date';
 import { minorToRupees, parseAmountToMinor } from '@/lib/money';
 import { categorize } from '@/services/category-rules';
 import { parse } from '@/services/receipt-parser';
-import type { Category, NewExpense } from '@/types';
+import type { Category, Expense, NewExpense } from '@/types';
+
+const ISO_DATE = 'YYYY-MM-DD';
+const DEFAULT_CATEGORY_NAME = 'Other';
 
 export interface ReviewForm {
   amount: string;
@@ -21,6 +26,21 @@ export function parsedToInitialForm(rawText: string): ReviewForm {
     merchant: parsed.merchant ?? '',
     note: '',
     categoryName: categorize(parsed.merchant),
+  };
+}
+
+/**
+ * Build a ReviewForm from a stored expense — the inverse of buildExpenseFromForm.
+ * Used to prefill the edit screen. Pure.
+ */
+export function expenseToForm(expense: Expense, categories: readonly Category[]): ReviewForm {
+  const category = categories.find((c) => c.id === expense.categoryId);
+  return {
+    amount: String(minorToRupees(expense.amountMinor)),
+    date: dayjs(expense.spentAt).format(ISO_DATE),
+    merchant: expense.merchant ?? '',
+    note: expense.note ?? '',
+    categoryName: category?.name ?? DEFAULT_CATEGORY_NAME,
   };
 }
 
