@@ -156,14 +156,17 @@ interface ExpenseRepository {
 
 ## CURRENT IMPLEMENTATION
 Scaffolded on **Expo SDK 56** (React Native 0.85, React 19, TypeScript strict). Implemented so far:
-- **Phase 0 — Bootstrap:** project config (Expo Router, ESLint flat + Prettier, Jest via `jest-expo`, EAS profiles in `eas.json`). Device dev-build verification still pending (needs a physical Android phone).
-- **Phase 1 — Data layer:** Drizzle schema (`src/db/schema.ts`) + generated migration, `seedCategories`, and a driver-injected `ExpenseRepository`. CRUD + `monthlyByCategory` + filters are tested **headlessly** against real SQLite (`better-sqlite3`) — 11 passing repo tests.
-- **Phase 2 — Parser:** pure `ReceiptParser` + `CategoryRules` with a labeled OCR fixture set. **Amount-extraction accuracy: 91.7%** (target ≥85%); 100% line coverage on both pure modules.
-- **Phases 3–5 (wired, device-pending):** camera capture + ML Kit OCR (`src/services/ocr-service.ts`, `app/capture.tsx`), review/edit + category picker (`app/review.tsx`), dashboard + history + detail screens, Zustand store. These typecheck and lint clean but await on-device verification (camera, ML Kit, expo-sqlite are native).
+- **Phase 0 — Bootstrap:** ✅ code-side done (Expo Router, ESLint flat + Prettier, Jest, EAS profiles in `eas.json`, CI on Node 24). ⏳ on-device dev-build run still pending (needs a physical Android phone).
+- **Phase 1 — Data layer:** ✅ Drizzle schema + generated migration, `seedCategories`, driver-injected `ExpenseRepository`. CRUD + `monthlyByCategory` + filters tested **headlessly** against real SQLite (`better-sqlite3`).
+- **Phase 2 — Parser:** ✅ pure `ReceiptParser` + `CategoryRules` + labeled OCR fixtures. **Amount accuracy 91.7%** (target ≥85%); 100% line coverage.
+- **Phase 4 — Review→Save:** ✅ logic complete: review-screen form logic extracted to a pure `expense-draft` module (prefill, validation, draft-build) and unit-tested headlessly; repository persistence tested. ⏳ RNTL *rendering* tests deferred (see toolchain note) and on-device save unverified.
+- **Phase 5 — Dashboard & History:** ✅ month total, **category pie chart** (`react-native-gifted-charts`, pure `toPieSlices` mapper + tests), history filter/search with tested query layer. ⏳ on-device visual check pending.
+- **Phase 6 — Polish:** ✅ a11y labels, empty/error states, app-wide error boundary, image compression (≤1600px before OCR/storage). ⏳ Maestro E2E run needs an emulator/device.
+- **Phases 3 & 7 — device/EAS-gated:** camera + ML Kit OCR wired (`app/capture.tsx`, `src/services/ocr-service.ts`) but unrunnable without hardware; EAS release build / APK / `v0.1.0` tag need an EAS account + device.
 
-**Gate status:** `npm run lint && npm run typecheck && npm test` all green (60 tests) — verified in GitHub Actions CI on Node 24.
-**Test toolchain note:** Phase 1–2 tests are pure logic + SQLite, so they run under **ts-jest** (Node env) — no React Native test stack needed yet. `jest-expo` + React Native Testing Library are deferred to **Phase 4** (component tests). `.npmrc` sets `legacy-peer-deps=true` because `expo-router` peer-declares RNTL, whose auto-install otherwise pulls a non-deterministic RN-0.86/test-renderer tree and breaks strict `npm ci`.
-**Remaining:** on-device OCR verification (Phase 3), dashboard category chart via gifted-charts (Phase 5), a11y/error-boundary polish + Maestro run (Phase 6), CI/EAS release (Phase 7).
+**Gate status:** `npm run lint && npm run typecheck && npm test` all green (**70 tests**, 100% lines on covered modules) — verified in GitHub Actions CI on Node 24. Android JS bundle (`expo export`) verified clean.
+**Test toolchain note:** all current suites are pure logic + SQLite, run under **ts-jest** (Node) — no React Native test stack. `jest-expo` + React Native Testing Library will return for component *rendering* tests; they are intentionally absent because RNTL v14's `test-renderer@1` peer pulls a non-deterministic RN-0.86 tree that breaks strict `npm ci` on this RN-0.85/React-19 project. `.npmrc` sets `legacy-peer-deps=true` (expo-router peer-declares RNTL) to keep the lock file stable.
+**Cannot be done without hardware:** on-device OCR accuracy on real photographed receipts (Phase 3), Maestro E2E (Phase 6), installable APK + release tag (Phase 7).
 
 ## SECURITY REQUIREMENTS
 - No API keys, tokens, or secrets — nothing to leak.

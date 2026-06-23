@@ -86,6 +86,7 @@ export default function ReviewScreen() {
                 onPress={() => setCategoryName(c.name)}
                 style={[styles.chip, active && { backgroundColor: c.color }]}
                 accessibilityRole="button"
+                accessibilityLabel={`Category ${c.name}`}
                 accessibilityState={{ selected: active }}
               >
                 <Text style={[styles.chipText, active && styles.chipTextActive]}>{c.name}</Text>
