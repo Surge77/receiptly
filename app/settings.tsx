@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 
 import { useExpenseStore } from '@/state/expense-store';
+import { layout, mono, paper, type } from '@/theme';
 
 const PALETTE = [
   '#EF4444',
@@ -50,7 +51,7 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-      <Text style={styles.sectionTitle}>Categories</Text>
+      <Text style={styles.sectionTitle}>* CATEGORIES *</Text>
       {categories.map((c) => (
         <View key={c.id} style={styles.row} accessibilityLabel={`Category ${c.name}`}>
           <View style={[styles.swatch, { backgroundColor: c.color }]} />
@@ -58,7 +59,7 @@ export default function SettingsScreen() {
         </View>
       ))}
 
-      <Text style={styles.sectionTitle}>Add category</Text>
+      <Text style={styles.sectionTitle}>* ADD CATEGORY *</Text>
       <TextInput
         value={name}
         onChangeText={setName}
@@ -97,36 +98,45 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, gap: 12 },
-  sectionTitle: { fontSize: 16, fontWeight: '600', marginTop: 12 },
+  container: { padding: layout.screenPad, gap: 12, backgroundColor: paper.bg },
+  sectionTitle: { ...type.label, textAlign: 'center', marginTop: 12 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E7EB',
+    ...layout.tearline,
   },
-  swatch: { width: 20, height: 20, borderRadius: 6 },
-  rowLabel: { fontSize: 15 },
+  swatch: { width: 18, height: 18, borderRadius: 2 },
+  rowLabel: { ...type.body, fontWeight: '600' },
   input: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 10,
+    fontFamily: mono,
+    borderWidth: 1.5,
+    borderColor: paper.ink,
+    borderRadius: 3,
+    backgroundColor: paper.card,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    fontSize: 16,
+    fontSize: 15,
+    color: paper.ink,
   },
   palette: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  colorDot: { width: 32, height: 32, borderRadius: 16 },
-  colorDotActive: { borderWidth: 3, borderColor: '#111827' },
+  colorDot: { width: 32, height: 32, borderRadius: 3 },
+  colorDotActive: { borderWidth: 3, borderColor: paper.ink },
   save: {
-    backgroundColor: '#2563EB',
-    borderRadius: 12,
-    paddingVertical: 16,
+    backgroundColor: paper.accent,
+    borderRadius: 3,
+    paddingVertical: 15,
     alignItems: 'center',
     marginTop: 8,
   },
-  saveDisabled: { opacity: 0.5 },
-  saveText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+  saveDisabled: { opacity: 0.4 },
+  saveText: {
+    fontFamily: mono,
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 13,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+  },
 });

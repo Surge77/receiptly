@@ -1,12 +1,15 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 
+import { InkButton } from '@/components/ink-button';
+import { ReceiptCard } from '@/components/receipt-card';
 import { db, schema } from '@/db/client';
 import { monthKey } from '@/lib/date';
 import { formatINR } from '@/lib/money';
 import { createExpenseRepository } from '@/services/expense-repository';
 import { useExpenseStore } from '@/state/expense-store';
+import { layout, mono, paper, type } from '@/theme';
 import type { Expense } from '@/types';
 
 const repo = createExpenseRepository(db);
@@ -32,7 +35,7 @@ export default function ExpenseDetailScreen() {
   if (!expense) {
     return (
       <View style={styles.center}>
-        <Text style={styles.muted}>Expense not found.</Text>
+        <Text style={styles.muted}>EXPENSE NOT FOUND</Text>
       </View>
     );
   }
@@ -53,24 +56,26 @@ export default function ExpenseDetailScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.amount}>{formatINR(expense.amountMinor)}</Text>
-      <Detail label="Merchant" value={expense.merchant ?? 'Unknown'} />
-      <Detail label="Category" value={categoryName ?? 'Uncategorized'} />
-      <Detail label="Date" value={monthKey(expense.spentAt)} />
-      {expense.note ? <Detail label="Note" value={expense.note} /> : null}
+      <ReceiptCard>
+        <Text style={styles.cardHeading}>*** RECEIPTLY ***</Text>
+        <Text style={styles.cardSub}>EXPENSE RECORD №{String(expenseId).padStart(4, '0')}</Text>
+        <View style={styles.tear} />
+        <Detail label="MERCHANT" value={(expense.merchant ?? 'Unknown').toUpperCase()} />
+        <Detail label="CATEGORY" value={(categoryName ?? 'Uncategorized').toUpperCase()} />
+        <Detail label="DATE" value={monthKey(expense.spentAt)} />
+        {expense.note ? <Detail label="NOTE" value={expense.note} /> : null}
+        <View style={styles.tear} />
+        <View style={styles.totalRow}>
+          <Text style={styles.totalLabel}>TOTAL</Text>
+          <Text style={styles.totalValue}>{formatINR(expense.amountMinor)}</Text>
+        </View>
+        <View style={styles.doubleRule} />
+      </ReceiptCard>
 
-      <Pressable
-        style={styles.edit}
-        onPress={() => router.push(`/edit/${expenseId}`)}
-        accessibilityRole="button"
-        accessibilityLabel="Edit expense"
-      >
-        <Text style={styles.editText}>Edit</Text>
-      </Pressable>
-
-      <Pressable style={styles.delete} onPress={onDelete} accessibilityRole="button">
-        <Text style={styles.deleteText}>Delete</Text>
-      </Pressable>
+      <View style={styles.actions}>
+        <InkButton label="Edit" onPress={() => router.push(`/edit/${expenseId}`)} />
+        <InkButton label="Delete" variant="danger" onPress={onDelete} />
+      </View>
     </View>
   );
 }
@@ -79,39 +84,48 @@ function Detail({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.row}>
       <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{value}</Text>
+      <Text style={styles.dots} numberOfLines={1}>
+        ....................
+      </Text>
+      <Text style={styles.value} numberOfLines={2}>
+        {value}
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  muted: { color: '#9CA3AF' },
-  amount: { fontSize: 32, fontWeight: '700', marginBottom: 16 },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E7EB',
-  },
-  label: { color: '#6B7280', fontSize: 15 },
-  value: { fontSize: 15, fontWeight: '500' },
-  edit: {
-    marginTop: 'auto',
-    backgroundColor: '#2563EB',
-    borderRadius: 12,
-    paddingVertical: 14,
+  container: { flex: 1, padding: layout.screenPad, backgroundColor: paper.bg },
+  center: {
+    flex: 1,
     alignItems: 'center',
-    marginBottom: 12,
+    justifyContent: 'center',
+    backgroundColor: paper.bg,
   },
-  editText: { color: '#fff', fontWeight: '600', fontSize: 16 },
-  delete: {
-    backgroundColor: '#FEE2E2',
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
+  muted: { ...type.label },
+  cardHeading: { ...type.title, textAlign: 'center', marginTop: 4 },
+  cardSub: {
+    fontFamily: mono,
+    fontSize: 11,
+    letterSpacing: 1.5,
+    color: paper.inkFaded,
+    textAlign: 'center',
+    marginTop: 4,
   },
-  deleteText: { color: '#B91C1C', fontWeight: '600', fontSize: 16 },
+  tear: { marginVertical: 12, ...layout.tearline },
+  row: { flexDirection: 'row', alignItems: 'baseline', paddingVertical: 6, gap: 6 },
+  label: { ...type.label, fontSize: 12 },
+  dots: { ...type.body, color: paper.inkFaint, flex: 1 },
+  value: { ...type.body, fontWeight: '600', maxWidth: '55%', textAlign: 'right' },
+  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
+  totalLabel: { ...type.title },
+  totalValue: { ...type.amount, fontFamily: mono, fontSize: 28 },
+  doubleRule: {
+    marginTop: 10,
+    borderBottomWidth: 3,
+    borderTopWidth: 1,
+    borderColor: paper.ink,
+    height: 6,
+  },
+  actions: { flexDirection: 'row', gap: 10, marginTop: 'auto' },
 });
