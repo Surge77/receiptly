@@ -3,7 +3,7 @@
 Thanks for your interest! This is a solo-maintained portfolio project, but issues and PRs are welcome.
 
 ## Ground rules
-- Read [PLAN.md](PLAN.md) first — it defines the architecture and scope. PRs that add technologies outside the **TECH STACK** section, or features in **OUT OF SCOPE**, will be declined unless the plan is updated first.
+- Read the README's Architecture section first — it defines the layering and scope. PRs adding new technologies or out-of-scope features (cloud sync, accounts, iOS) will be declined unless discussed first.
 - Be respectful — see the [Code of Conduct](CODE_OF_CONDUCT.md).
 - Never commit secrets, keystores, or `.env*` files.
 

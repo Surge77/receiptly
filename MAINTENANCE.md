@@ -5,7 +5,7 @@ How this project is kept healthy. Solo-maintained, best-effort.
 ## Cadence
 - **Dependencies:** review monthly; apply security patches promptly (`npm audit`).
 - **Expo SDK:** upgrade one SDK at a time, following the official upgrade guide; verify a dev build boots on a real device before merging.
-- **Releases:** SemVer; tag when a phase (see [PLAN.md](PLAN.md)) completes and CI is green.
+- **Releases:** SemVer; tag when a milestone completes and CI is green.
 
 ## Branching
 - `main` is always releasable and protected (CI must pass).
@@ -28,7 +28,7 @@ A change is mergeable only when:
 - **foojay-resolver-convention 0.5.0 vs Gradle 9** — after every `npm install`, bump it to `1.0.0` in `node_modules/@react-native/gradle-plugin/settings.gradle.kts` or local Gradle builds fail (`NoSuchFieldError: JvmVendorSpec.IBM_SEMERU`). Remove once RN ships the fix (facebook/react-native#55781).
 
 ## Release checklist
-1. All target phase gates pass (PLAN.md roadmap).
+1. Full gate passes (lint, typecheck, tests).
 2. CHANGELOG updated.
 3. Bump version, tag `vX.Y.Z`.
 4. EAS release build produced and smoke-tested on a clean device.
@@ -36,4 +36,4 @@ A change is mergeable only when:
 
 ## Triage
 - Bugs labeled `bug`; security via [SECURITY.md](SECURITY.md) (never public).
-- Out-of-scope requests are closed with a pointer to PLAN.md "OUT OF SCOPE".
+- Out-of-scope requests are closed with a short rationale.

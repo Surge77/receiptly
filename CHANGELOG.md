@@ -9,7 +9,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 - Custom launcher icon + Android adaptive icon (vermillion receipt glyph).
 - Local Android release-build path (prebuild + Gradle, ~3 min incremental).
 - Gallery import, CSV export, edit-expense, history month/category filters, user-added categories.
-- Production context plan (`PLAN.md`) following the Prompt Context template.
 - Project governance: README, LICENSE (MIT), SECURITY, CODE_OF_CONDUCT, CONTRIBUTING, MAINTENANCE.
 - GitHub issue/PR templates and CI workflow (lint, typecheck, test).
 

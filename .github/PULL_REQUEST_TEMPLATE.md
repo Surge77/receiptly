@@ -12,7 +12,7 @@ What does this PR change, and why? Link the issue (`Closes #...`).
   - Device + Android version:
 
 ## Checklist
-- [ ] Follows the architecture in `PLAN.md` (no new tech without updating the plan)
+- [ ] Follows the layered architecture (UI → store → services → SQLite); no new tech without prior discussion
 - [ ] Files under 300 lines
 - [ ] No secrets / keystores / `.env*` committed
 - [ ] Tests added/updated for new logic

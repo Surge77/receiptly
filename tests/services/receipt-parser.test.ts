@@ -1,7 +1,7 @@
 import { parse } from '@/services/receipt-parser';
 import { RECEIPT_FIXTURES } from '../fixtures/receipts';
 
-// Baseline target from PLAN.md Phase 2. Raise this as the parser improves.
+// Minimum acceptable amount-extraction accuracy. Raise this as the parser improves.
 const AMOUNT_ACCURACY_TARGET = 0.85;
 
 describe('ReceiptParser — accuracy on labeled fixtures', () => {

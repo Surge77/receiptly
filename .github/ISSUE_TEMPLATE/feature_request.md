@@ -12,7 +12,7 @@ What problem does this solve? Who has it?
 What you'd like to happen.
 
 ## Scope check
-- [ ] I've read `PLAN.md` and this is **not** in the "OUT OF SCOPE" list.
+- [ ] This fits the app's offline-first, on-device scope (no cloud sync, accounts, or iOS).
 - [ ] This does not require a new technology outside the TECH STACK (or I've explained why it should be added).
 
 ## Alternatives considered

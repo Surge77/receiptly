@@ -15,7 +15,7 @@ Manual expense entry is tedious, so people stop. Receiptly removes the typing: s
 
 The release APK installs and runs standalone (no Metro, no laptop) — launch-crash root cause (missing `expo-linear-gradient` peer dep of gifted-charts) was found via emulator logcat and fixed. The app ships a custom launcher icon and a **thermal-receipt UI**: paper-cream palette, printer-mono type, serrated receipt cards, dashed tear-lines, vermillion stamp accent.
 
-**Still needs a physical Android phone:** ML Kit OCR accuracy on real paper receipts and a Maestro E2E run. See [PLAN.md → CURRENT IMPLEMENTATION](PLAN.md) for the on-device QA checklist.
+**Still needs a physical Android phone:** ML Kit OCR accuracy on real paper receipts and a Maestro E2E run.
 
 ## Stack
 Expo (dev build) · React Native · TypeScript · Expo Router · expo-camera · ML Kit Text Recognition (on-device) · expo-sqlite + Drizzle ORM · Zustand · gifted-charts (+ expo-linear-gradient) · Jest + React Native Testing Library · Maestro (E2E) · EAS Build or local Gradle.
@@ -56,10 +56,10 @@ npm run e2e         # Maestro flows (needs emulator/device)
 ```
 
 ## Architecture
-Layered, offline-first, no backend: `UI → Zustand → services (OCR · parser · category-rules · repository) → SQLite`. The parser and category rules are **pure functions** (fully unit-tested). See [PLAN.md](PLAN.md) for the full design, schema, and phased roadmap.
+Layered, offline-first, no backend: `UI → Zustand → services (OCR · parser · category-rules · repository) → SQLite`. The parser and category rules are **pure functions** (fully unit-tested).
 
 ## Testing
-Pyramid: unit (parser accuracy on labeled fixtures — the headline metric), component (RNTL), E2E (Maestro), plus a manual device check for real camera/OCR (the one thing no emulator can verify). Details in [PLAN.md → TESTING STRATEGY](PLAN.md).
+Pyramid: unit (parser accuracy on labeled fixtures — the headline metric), component (RNTL), E2E (Maestro), plus a manual device check for real camera/OCR (the one thing no emulator can verify).
 
 ## Contributing
 See [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md). Security issues: [SECURITY.md](SECURITY.md).
