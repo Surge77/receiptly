@@ -6,10 +6,8 @@
     "orientation": "portrait",
     "scheme": "receiptly",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "android": {
       "package": "com.tejas.receiptly",
-      "edgeToEdgeEnabled": true,
       "permissions": [
         "android.permission.CAMERA"
       ],
