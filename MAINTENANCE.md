@@ -22,6 +22,10 @@ A change is mergeable only when:
 - Pin direct dependencies; commit the lockfile.
 - Before adding a dependency, check: maintenance recency, downloads, license, and APK size impact.
 - Prefer Expo-supported libraries to keep the managed build path working.
+- Check optional peer deps of UI libraries against `package.json` — they fail only at runtime in release builds (gifted-charts/`expo-linear-gradient` incident). Smoke-test a release APK on the emulator before shipping links.
+
+## Known workarounds
+- **foojay-resolver-convention 0.5.0 vs Gradle 9** — after every `npm install`, bump it to `1.0.0` in `node_modules/@react-native/gradle-plugin/settings.gradle.kts` or local Gradle builds fail (`NoSuchFieldError: JvmVendorSpec.IBM_SEMERU`). Remove once RN ships the fix (facebook/react-native#55781).
 
 ## Release checklist
 1. All target phase gates pass (PLAN.md roadmap).

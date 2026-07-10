@@ -9,21 +9,21 @@
 Manual expense entry is tedious, so people stop. Receiptly removes the typing: snap a receipt → on-device ML Kit OCR reads it → a parser extracts amount, date, and merchant → you confirm and it's logged. Everything stays on your phone.
 
 ## Status
-🟢 **Feature-complete except hardware-gated steps.** All device-independent work across Phases 0–6 is implemented and verified headlessly: data layer, parser, review-save logic, dashboard + pie chart, history search, image compression, a11y, error boundary. Full gate (`lint + typecheck + test`) is green with **80 tests** in CI, and the Android JS bundle builds clean.
+🟢 **Working standalone release APK, verified on emulator.** All phases implemented: data layer, parser, review-save logic, dashboard + pie chart, history search + filters, gallery import, CSV export, edit-expense, user-added categories, image compression, a11y, error boundary. Full gate (`lint + typecheck + test`) is green with **103 tests**.
 
 **Parser amount-extraction accuracy: 96.2%** on the labeled OCR fixture set (target ≥85%).
 
-An **EAS development APK has been built successfully** (Android, SDK 56 — full native graph compiled in the cloud), so Phase 0/7 build artifacts exist. Beyond the core phases, the app also has gallery import, CSV export, edit-expense, history month/category filters, and user-addable categories.
+The release APK installs and runs standalone (no Metro, no laptop) — launch-crash root cause (missing `expo-linear-gradient` peer dep of gifted-charts) was found via emulator logcat and fixed. The app ships a custom launcher icon and a **thermal-receipt UI**: paper-cream palette, printer-mono type, serrated receipt cards, dashed tear-lines, vermillion stamp accent.
 
-**Still needs a physical Android phone:** running that APK for on-device ML Kit OCR accuracy on real receipts (Phase 3) and a Maestro E2E run (Phase 6). See [PLAN.md → CURRENT IMPLEMENTATION](PLAN.md) for the on-device QA checklist.
+**Still needs a physical Android phone:** ML Kit OCR accuracy on real paper receipts and a Maestro E2E run. See [PLAN.md → CURRENT IMPLEMENTATION](PLAN.md) for the on-device QA checklist.
 
 ## Stack
-Expo (dev build) · React Native · TypeScript · Expo Router · expo-camera · ML Kit Text Recognition (on-device) · expo-sqlite + Drizzle ORM · Zustand · gifted-charts · Jest + React Native Testing Library · Maestro (E2E) · EAS Build.
+Expo (dev build) · React Native · TypeScript · Expo Router · expo-camera · ML Kit Text Recognition (on-device) · expo-sqlite + Drizzle ORM · Zustand · gifted-charts (+ expo-linear-gradient) · Jest + React Native Testing Library · Maestro (E2E) · EAS Build or local Gradle.
 
 > ⚠️ Uses native modules (ML Kit), so it runs on an Expo **development build**, **not** Expo Go.
 
 ## Getting started
-**Prerequisites:** Node LTS, a physical Android phone (USB debugging) or emulator, a free [Expo/EAS](https://expo.dev) account. **Android Studio is optional** (only for an emulator — a real phone + EAS Build is enough).
+**Prerequisites:** Node LTS, a physical Android phone (USB debugging) or emulator, a free [Expo/EAS](https://expo.dev) account (cloud builds only).
 
 ```bash
 npm install
@@ -31,6 +31,21 @@ npm run db:generate                 # regenerate Drizzle migrations if schema ch
 npx eas build --profile development --platform android   # one-time: build the dev client
 npm start                           # expo start --dev-client; open on your phone
 ```
+
+### Building an installable APK
+Three ways, pick by need:
+
+| Method | Command | Time | Use when |
+|--------|---------|------|----------|
+| **Local release** (fastest) | `npx expo prebuild --platform android --no-install` then `cd android && gradlew assembleRelease` | ~3 min (after first build) | Android SDK + JDK 17+ installed |
+| EAS preview (cloud) | `npx eas build --profile preview --platform android` | 15–30 min queue+build | no local SDK |
+| EAS production | `npx eas build --profile production --platform android` | same | Play Store AAB |
+
+Local output: `android/app/build/outputs/apk/release/app-release.apk`.
+
+> **Gradle 9 gotcha:** after every `npm install`, re-patch `node_modules/@react-native/gradle-plugin/settings.gradle.kts` — bump `foojay-resolver-convention` from `0.5.0` to `1.0.0`, else the build fails with `NoSuchFieldError: JvmVendorSpec.IBM_SEMERU` ([facebook/react-native#55781](https://github.com/facebook/react-native/issues/55781)).
+
+> **APK profiles:** `development` = tethered dev client (blank screen standalone — needs Metro). `preview`/local release = JS baked in, runs standalone.
 
 ## Scripts (target, available after Phase 0)
 ```bash
