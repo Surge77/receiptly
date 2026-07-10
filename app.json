@@ -31,7 +31,16 @@
           "recordAudioAndroid": false
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      "@react-native-community/datetimepicker",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/adaptive-icon.png",
+          "imageWidth": 180,
+          "backgroundColor": "#F4EEE1"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

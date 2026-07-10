@@ -41,6 +41,17 @@ export interface CategoryTotal {
   totalMinor: number;
 }
 
+export interface Budget {
+  categoryId: number;
+  limitMinor: number;
+}
+
+export interface BudgetStatus extends Budget {
+  spentMinor: number;
+  /** spent / limit; >= 1 means over budget. */
+  ratio: number;
+}
+
 export interface FieldConfidence {
   amount: number;
   date: number;

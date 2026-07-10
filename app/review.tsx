@@ -1,3 +1,6 @@
+import DateTimePicker from '@react-native-community/datetimepicker';
+import dayjs from 'dayjs';
+import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -21,7 +24,7 @@ import { layout, mono, paper } from '@/theme';
 export default function ReviewScreen() {
   const params = useLocalSearchParams<{ imageUri?: string; rawText?: string }>();
   const rawText = params.rawText ?? '';
-  const { categories, addExpense, loadCategories } = useExpenseStore();
+  const { categories, addExpense, loadCategories, suggestCategoryId } = useExpenseStore();
 
   const initial = useMemo(() => parsedToInitialForm(rawText), [rawText]);
 
@@ -30,10 +33,20 @@ export default function ReviewScreen() {
   const [merchant, setMerchant] = useState(initial.merchant);
   const [note, setNote] = useState(initial.note);
   const [categoryName, setCategoryName] = useState(initial.categoryName);
+  const [showPicker, setShowPicker] = useState(false);
 
   useEffect(() => {
     void loadCategories();
   }, [loadCategories]);
+
+  // Learned merchant→category beats the keyword guess, once, on the OCR'd merchant.
+  useEffect(() => {
+    if (!initial.merchant) return;
+    void suggestCategoryId(initial.merchant).then((id) => {
+      const learned = useExpenseStore.getState().categories.find((c) => c.id === id);
+      if (learned) setCategoryName(learned.name);
+    });
+  }, [initial.merchant, suggestCategoryId]);
 
   const form = { amount, date, merchant, note, categoryName };
   const canSave = isFormSavable(form);
@@ -43,6 +56,7 @@ export default function ReviewScreen() {
     if (!draft) return;
     try {
       await addExpense(draft);
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       router.replace('/');
     } catch (e) {
       if (__DEV__) console.error('Failed to save expense', e);
@@ -64,13 +78,24 @@ export default function ReviewScreen() {
       </Field>
 
       <Field label="Date">
-        <TextInput
-          value={date}
-          onChangeText={setDate}
-          style={styles.input}
-          placeholder="YYYY-MM-DD"
-          accessibilityLabel="Date"
-        />
+        <Pressable
+          onPress={() => setShowPicker(true)}
+          accessibilityRole="button"
+          accessibilityLabel={`Date ${date}, tap to change`}
+        >
+          <Text style={[styles.input, styles.dateText]}>{date}</Text>
+        </Pressable>
+        {showPicker ? (
+          <DateTimePicker
+            value={dayjs(date).isValid() ? dayjs(date).toDate() : new Date()}
+            mode="date"
+            maximumDate={new Date()}
+            onChange={(event, selected) => {
+              setShowPicker(false);
+              if (event.type === 'set' && selected) setDate(dayjs(selected).format('YYYY-MM-DD'));
+            }}
+          />
+        ) : null}
       </Field>
 
       <Field label="Merchant">
@@ -156,6 +181,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: paper.ink,
   },
+  dateText: { paddingVertical: 12 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     paddingHorizontal: 12,

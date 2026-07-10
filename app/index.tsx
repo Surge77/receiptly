@@ -1,37 +1,71 @@
 import { Link, useFocusEffect } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import { BudgetBars } from '@/components/budget-bars';
 import { CategoryPieChart } from '@/components/category-pie-chart';
 import { InkButton } from '@/components/ink-button';
 import { ReceiptCard } from '@/components/receipt-card';
 import { monthKey } from '@/lib/date';
 import { formatINR } from '@/lib/money';
+import { weeklyInsight } from '@/services/insights';
 import { useExpenseStore } from '@/state/expense-store';
-import { layout, paper, type } from '@/theme';
+import { layout, mono, paper, type } from '@/theme';
 
 export default function DashboardScreen() {
-  const { expenses, monthTotals, categories, loadExpenses, loadMonth, loadCategories } =
-    useExpenseStore();
+  const {
+    expenses,
+    monthTotals,
+    categories,
+    budgetStatuses,
+    loadExpenses,
+    loadMonth,
+    loadCategories,
+    loadBudgets,
+  } = useExpenseStore();
+
+  const [now, setNow] = useState(0);
 
   useFocusEffect(
     useCallback(() => {
-      const thisMonth = monthKey(Date.now());
+      const focusedAt = Date.now();
+      setNow(focusedAt);
       void loadCategories();
-      void loadExpenses({ month: thisMonth });
-      void loadMonth(thisMonth);
-    }, [loadCategories, loadExpenses, loadMonth]),
+      void loadExpenses();
+      void loadBudgets().then(() => loadMonth(monthKey(focusedAt)));
+    }, [loadCategories, loadExpenses, loadBudgets, loadMonth]),
   );
 
   const monthTotal = monthTotals.reduce((sum, t) => sum + t.totalMinor, 0);
+  const week = useMemo(() => weeklyInsight(expenses, now), [expenses, now]);
+  const weekTopName = categories.find((c) => c.id === week.topCategoryId)?.name;
 
   return (
     <View style={styles.container}>
-      <ReceiptCard>
-        <Text style={type.label}>This month · total</Text>
+      <Animated.View entering={FadeInDown.duration(350)}>
+        <ReceiptCard>
+          <Text style={type.label}>This month · total</Text>
         <Text style={styles.totalValue}>{formatINR(monthTotal)}</Text>
+        {week.count > 0 ? (
+          <Text style={styles.weekLine} numberOfLines={1}>
+            7D {formatINR(week.totalMinor)}
+            {week.changeRatio !== null
+              ? ` · ${week.changeRatio >= 0 ? '+' : ''}${Math.round(week.changeRatio * 100)}% VS LAST WK`
+              : ''}
+            {weekTopName ? ` · TOP ${weekTopName.toUpperCase()}` : ''}
+          </Text>
+        ) : null}
         <View style={styles.totalRule} />
-      </ReceiptCard>
+        </ReceiptCard>
+      </Animated.View>
+
+      {budgetStatuses.length > 0 ? (
+        <>
+          <Text style={styles.divider}>* BUDGETS *</Text>
+          <BudgetBars statuses={budgetStatuses} categories={categories} />
+        </>
+      ) : null}
 
       <Text style={styles.divider}>* BY CATEGORY *</Text>
       {monthTotals.length === 0 ? (
@@ -60,15 +94,20 @@ export default function DashboardScreen() {
         )}
       />
 
-      <View style={styles.actions}>
+      <View style={styles.actionsTop}>
         <Link href="/settings" asChild>
           <InkButton label="Setup" variant="ghost" />
         </Link>
         <Link href="/history" asChild>
           <InkButton label="History" variant="ghost" />
         </Link>
+      </View>
+      <View style={styles.actions}>
+        <Link href="/quick-add" asChild>
+          <InkButton label="+ Quick" variant="primary" />
+        </Link>
         <Link href="/capture" asChild>
-          <InkButton label="Capture" variant="primary" />
+          <InkButton label="📷 Scan" />
         </Link>
       </View>
     </View>
@@ -96,5 +135,7 @@ const styles = StyleSheet.create({
   rowDots: { ...type.body, color: paper.inkFaint, flex: 1 },
   rowValue: { ...type.body, ...type.amount, fontSize: 14 },
   empty: { ...type.label, textAlign: 'center', paddingVertical: 14 },
-  actions: { flexDirection: 'row', gap: 10, marginTop: 'auto' },
+  weekLine: { fontFamily: mono, fontSize: 11, letterSpacing: 1, color: paper.inkFaded, marginTop: 6 },
+  actionsTop: { flexDirection: 'row', gap: 10, marginTop: 'auto' },
+  actions: { flexDirection: 'row', gap: 10, marginTop: 10 },
 });

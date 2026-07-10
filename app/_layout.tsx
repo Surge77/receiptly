@@ -2,6 +2,8 @@ import { Stack, type ErrorBoundaryProps } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { LockGate } from '@/components/lock-gate';
+import { ToastHost } from '@/components/toast';
 import { useDatabaseSetup } from '@/db/use-database-setup';
 import { mono, paper } from '@/theme';
 
@@ -39,7 +41,7 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    <LockGate>
       <StatusBar style="dark" />
       <Stack
         screenOptions={{
@@ -51,6 +53,7 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="index" options={{ title: 'RECEIPTLY' }} />
+        <Stack.Screen name="quick-add" options={{ title: 'QUICK ADD' }} />
         <Stack.Screen name="capture" options={{ title: 'CAPTURE' }} />
         <Stack.Screen name="review" options={{ title: 'REVIEW' }} />
         <Stack.Screen name="history" options={{ title: 'HISTORY' }} />
@@ -58,7 +61,8 @@ export default function RootLayout() {
         <Stack.Screen name="expense/[id]" options={{ title: 'EXPENSE' }} />
         <Stack.Screen name="edit/[id]" options={{ title: 'EDIT' }} />
       </Stack>
-    </>
+      <ToastHost />
+    </LockGate>
   );
 }
 

@@ -1,3 +1,6 @@
+import DateTimePicker from '@react-native-community/datetimepicker';
+import dayjs from 'dayjs';
+import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -30,6 +33,7 @@ export default function EditExpenseScreen() {
   const [merchant, setMerchant] = useState('');
   const [note, setNote] = useState('');
   const [categoryName, setCategoryName] = useState('');
+  const [showPicker, setShowPicker] = useState(false);
 
   useEffect(() => {
     void loadCategories();
@@ -66,6 +70,7 @@ export default function EditExpenseScreen() {
     if (!draft) return;
     try {
       await editExpense(expenseId, draft);
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       router.back();
     } catch (e) {
       if (__DEV__) console.error('Failed to update expense', e);
@@ -87,13 +92,24 @@ export default function EditExpenseScreen() {
       </Field>
 
       <Field label="Date">
-        <TextInput
-          value={date}
-          onChangeText={setDate}
-          style={styles.input}
-          placeholder="YYYY-MM-DD"
-          accessibilityLabel="Date"
-        />
+        <Pressable
+          onPress={() => setShowPicker(true)}
+          accessibilityRole="button"
+          accessibilityLabel={`Date ${date}, tap to change`}
+        >
+          <Text style={[styles.input, styles.dateText]}>{date}</Text>
+        </Pressable>
+        {showPicker ? (
+          <DateTimePicker
+            value={dayjs(date).isValid() ? dayjs(date).toDate() : new Date()}
+            mode="date"
+            maximumDate={new Date()}
+            onChange={(event, selected) => {
+              setShowPicker(false);
+              if (event.type === 'set' && selected) setDate(dayjs(selected).format('YYYY-MM-DD'));
+            }}
+          />
+        ) : null}
       </Field>
 
       <Field label="Merchant">
@@ -187,6 +203,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: paper.ink,
   },
+  dateText: { paddingVertical: 12 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     paddingHorizontal: 12,

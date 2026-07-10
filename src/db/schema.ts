@@ -33,6 +33,37 @@ export const expenses = sqliteTable(
   ],
 );
 
+export const budgets = sqliteTable('budgets', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  categoryId: integer('category_id')
+    .notNull()
+    .unique()
+    .references(() => categories.id),
+  // Monthly limit in minor units (paise), same convention as expenses.amount.
+  limitMinor: integer('limit_minor').notNull(),
+  createdAt: integer('created_at')
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`),
+});
+
+// Learned merchant→category overrides; beats keyword rules once a user corrects a merchant.
+export const merchantMemory = sqliteTable('merchant_memory', {
+  // Normalized (lowercased, trimmed) merchant name.
+  merchant: text('merchant').primaryKey(),
+  categoryId: integer('category_id')
+    .notNull()
+    .references(() => categories.id),
+  updatedAt: integer('updated_at')
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`),
+});
+
+export const settings = sqliteTable('settings', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
+});
+
 export type CategoryRow = typeof categories.$inferSelect;
 export type ExpenseRow = typeof expenses.$inferSelect;
 export type NewExpenseRow = typeof expenses.$inferInsert;
+export type BudgetRow = typeof budgets.$inferSelect;
