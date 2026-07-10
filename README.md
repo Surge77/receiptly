@@ -9,7 +9,13 @@
 Manual expense entry is tedious, so people stop. Receiptly removes the typing: snap a receipt → on-device ML Kit OCR reads it → a parser extracts amount, date, and merchant → you confirm and it's logged. Everything stays on your phone.
 
 ## Status
-🚧 **Greenfield.** This repo currently holds the [production plan](PLAN.md) and project governance. App scaffolding starts at **Phase 0** in the plan.
+🟢 **Feature-complete except hardware-gated steps.** All device-independent work across Phases 0–6 is implemented and verified headlessly: data layer, parser, review-save logic, dashboard + pie chart, history search, image compression, a11y, error boundary. Full gate (`lint + typecheck + test`) is green with **80 tests** in CI, and the Android JS bundle builds clean.
+
+**Parser amount-extraction accuracy: 96.2%** on the labeled OCR fixture set (target ≥85%).
+
+An **EAS development APK has been built successfully** (Android, SDK 56 — full native graph compiled in the cloud), so Phase 0/7 build artifacts exist. Beyond the core phases, the app also has gallery import, CSV export, edit-expense, history month/category filters, and user-addable categories.
+
+**Still needs a physical Android phone:** running that APK for on-device ML Kit OCR accuracy on real receipts (Phase 3) and a Maestro E2E run (Phase 6). See [PLAN.md → CURRENT IMPLEMENTATION](PLAN.md) for the on-device QA checklist.
 
 ## Stack
 Expo (dev build) · React Native · TypeScript · Expo Router · expo-camera · ML Kit Text Recognition (on-device) · expo-sqlite + Drizzle ORM · Zustand · gifted-charts · Jest + React Native Testing Library · Maestro (E2E) · EAS Build.
@@ -20,10 +26,10 @@ Expo (dev build) · React Native · TypeScript · Expo Router · expo-camera · 
 **Prerequisites:** Node LTS, a physical Android phone (USB debugging) or emulator, a free [Expo/EAS](https://expo.dev) account. **Android Studio is optional** (only for an emulator — a real phone + EAS Build is enough).
 
 ```bash
-# Phase 0 (bootstrap) — see PLAN.md
-npx create-expo-app@latest .        # TypeScript template, in this folder
 npm install
-npx expo start                      # scan QR with the dev client on your phone
+npm run db:generate                 # regenerate Drizzle migrations if schema changed
+npx eas build --profile development --platform android   # one-time: build the dev client
+npm start                           # expo start --dev-client; open on your phone
 ```
 
 ## Scripts (target, available after Phase 0)
