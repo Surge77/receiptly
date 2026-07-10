@@ -54,6 +54,7 @@ export default function RootLayout() {
         <Stack.Screen name="capture" options={{ title: 'CAPTURE' }} />
         <Stack.Screen name="review" options={{ title: 'REVIEW' }} />
         <Stack.Screen name="history" options={{ title: 'HISTORY' }} />
+        <Stack.Screen name="settings" options={{ title: 'SETUP' }} />
         <Stack.Screen name="expense/[id]" options={{ title: 'EXPENSE' }} />
         <Stack.Screen name="edit/[id]" options={{ title: 'EDIT' }} />
       </Stack>

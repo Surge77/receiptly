@@ -13,6 +13,7 @@ interface InkButtonProps extends Omit<PressableProps, 'style'> {
 export function InkButton({ label, variant = 'ink', disabled, ...rest }: InkButtonProps) {
   return (
     <Pressable
+      {...rest}
       accessibilityRole="button"
       accessibilityLabel={label}
       disabled={disabled}
@@ -22,7 +23,6 @@ export function InkButton({ label, variant = 'ink', disabled, ...rest }: InkButt
         pressed && styles.pressed,
         disabled && styles.disabled,
       ]}
-      {...rest}
     >
       <Text style={[styles.text, variant === 'ghost' && styles.textGhost]}>{label}</Text>
     </Pressable>
