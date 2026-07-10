@@ -1,17 +1,29 @@
-import { useCallback, useState } from 'react';
+import * as DocumentPicker from 'expo-document-picker';
+import { File, Paths } from 'expo-file-system';
 import { useFocusEffect } from 'expo-router';
+import * as Sharing from 'expo-sharing';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   Pressable,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   View,
 } from 'react-native';
 
+import { BudgetEditor } from '@/components/budget-editor';
+import { useToast } from '@/components/toast';
+import { db } from '@/db/client';
+import { exportBackup, parseBackup, restoreBackup } from '@/services/backup';
+import { disableDailyReminder, enableDailyReminder } from '@/services/reminders';
+import { createSettingsRepository, SETTING_KEYS } from '@/services/settings-repository';
 import { useExpenseStore } from '@/state/expense-store';
 import { layout, mono, paper, type } from '@/theme';
+
+const settingsRepo = createSettingsRepository(db);
 
 const PALETTE = [
   '#EF4444',
@@ -25,15 +37,90 @@ const PALETTE = [
 ] as const;
 
 export default function SettingsScreen() {
-  const { categories, loadCategories, addCategory } = useExpenseStore();
+  const { categories, loadCategories, addCategory, loadBudgets, loadExpenses } = useExpenseStore();
+  const show = useToast((s) => s.show);
   const [name, setName] = useState('');
   const [color, setColor] = useState<string>(PALETTE[0]);
+  const [reminderOn, setReminderOn] = useState(false);
+  const [lockOn, setLockOn] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       void loadCategories();
-    }, [loadCategories]),
+      void loadBudgets();
+    }, [loadCategories, loadBudgets]),
   );
+
+  useEffect(() => {
+    void settingsRepo.getBool(SETTING_KEYS.dailyReminder).then(setReminderOn);
+    void settingsRepo.getBool(SETTING_KEYS.appLock).then(setLockOn);
+  }, []);
+
+  async function onToggleReminder(value: boolean) {
+    setReminderOn(value);
+    if (value) {
+      const granted = await enableDailyReminder();
+      if (!granted) {
+        setReminderOn(false);
+        show('Notification permission denied.');
+        return;
+      }
+    } else {
+      await disableDailyReminder();
+    }
+    await settingsRepo.setBool(SETTING_KEYS.dailyReminder, value);
+  }
+
+  async function onToggleLock(value: boolean) {
+    setLockOn(value);
+    await settingsRepo.setBool(SETTING_KEYS.appLock, value);
+  }
+
+  async function onExportBackup() {
+    try {
+      const json = await exportBackup(db, Date.now());
+      const file = new File(Paths.cache, 'receiptly-backup.json');
+      file.create({ overwrite: true });
+      file.write(json);
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(file.uri, {
+          mimeType: 'application/json',
+          dialogTitle: 'Export Receiptly backup',
+        });
+      }
+    } catch {
+      show('Backup export failed.');
+    }
+  }
+
+  async function onImportBackup() {
+    const result = await DocumentPicker.getDocumentAsync({ type: 'application/json' });
+    const asset = result.canceled ? undefined : result.assets[0];
+    if (!asset) return;
+    let backup;
+    try {
+      backup = parseBackup(await new File(asset.uri).text());
+    } catch (e) {
+      show(e instanceof Error ? e.message : 'Invalid backup file.');
+      return;
+    }
+    Alert.alert('Restore backup?', 'This replaces ALL current data with the backup.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Restore',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await restoreBackup(db, backup);
+            await Promise.all([loadCategories(), loadBudgets(), loadExpenses()]);
+            show('Backup restored.');
+          } catch {
+            show('Restore failed.');
+          }
+        },
+      },
+    ]);
+  }
 
   const trimmed = name.trim();
   const canAdd = trimmed.length > 0;
@@ -93,6 +180,47 @@ export default function SettingsScreen() {
       >
         <Text style={styles.saveText}>Add category</Text>
       </Pressable>
+
+      <Text style={styles.sectionTitle}>* MONTHLY BUDGETS *</Text>
+      <BudgetEditor />
+
+      <Text style={styles.sectionTitle}>* PREFERENCES *</Text>
+      <View style={styles.prefRow}>
+        <Text style={styles.prefLabel}>DAILY 9PM REMINDER</Text>
+        <Switch
+          value={reminderOn}
+          onValueChange={(v) => void onToggleReminder(v)}
+          trackColor={{ true: paper.accent }}
+          accessibilityLabel="Daily reminder"
+        />
+      </View>
+      <View style={styles.prefRow}>
+        <Text style={styles.prefLabel}>FINGERPRINT LOCK</Text>
+        <Switch
+          value={lockOn}
+          onValueChange={(v) => void onToggleLock(v)}
+          trackColor={{ true: paper.accent }}
+          accessibilityLabel="Fingerprint lock"
+        />
+      </View>
+
+      <Text style={styles.sectionTitle}>* BACKUP *</Text>
+      <View style={styles.backupRow}>
+        <Pressable
+          style={styles.backupButton}
+          onPress={() => void onExportBackup()}
+          accessibilityRole="button"
+        >
+          <Text style={styles.backupButtonText}>EXPORT</Text>
+        </Pressable>
+        <Pressable
+          style={styles.backupButton}
+          onPress={() => void onImportBackup()}
+          accessibilityRole="button"
+        >
+          <Text style={styles.backupButtonText}>RESTORE</Text>
+        </Pressable>
+      </View>
     </ScrollView>
   );
 }
@@ -138,5 +266,28 @@ const styles = StyleSheet.create({
     fontSize: 13,
     letterSpacing: 2,
     textTransform: 'uppercase',
+  },
+  prefRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+  },
+  prefLabel: { ...type.label, fontSize: 12, color: paper.ink },
+  backupRow: { flexDirection: 'row', gap: 10 },
+  backupButton: {
+    flex: 1,
+    borderWidth: 1.5,
+    borderColor: paper.ink,
+    borderRadius: 3,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  backupButtonText: {
+    fontFamily: mono,
+    color: paper.ink,
+    fontWeight: '700',
+    fontSize: 12,
+    letterSpacing: 2,
   },
 });

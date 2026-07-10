@@ -4,6 +4,7 @@ import { Alert, StyleSheet, Text, View } from 'react-native';
 
 import { InkButton } from '@/components/ink-button';
 import { ReceiptCard } from '@/components/receipt-card';
+import { useToast } from '@/components/toast';
 import { db, schema } from '@/db/client';
 import { monthKey } from '@/lib/date';
 import { formatINR } from '@/lib/money';
@@ -18,6 +19,8 @@ export default function ExpenseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const expenseId = Number(id);
   const deleteExpense = useExpenseStore((s) => s.deleteExpense);
+  const addExpense = useExpenseStore((s) => s.addExpense);
+  const show = useToast((s) => s.show);
   const [expense, setExpense] = useState<Expense | null>(null);
   const [categoryName, setCategoryName] = useState<string | null>(null);
 
@@ -41,7 +44,9 @@ export default function ExpenseDetailScreen() {
   }
 
   function onDelete() {
-    Alert.alert('Delete expense?', 'This cannot be undone.', [
+    const snapshot = expense;
+    if (!snapshot) return;
+    Alert.alert('Delete expense?', 'You can undo for a few seconds after.', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
@@ -49,6 +54,18 @@ export default function ExpenseDetailScreen() {
         onPress: async () => {
           await deleteExpense(expenseId);
           router.back();
+          show('Expense deleted.', 'UNDO', () => {
+            void addExpense({
+              amountMinor: snapshot.amountMinor,
+              currency: snapshot.currency,
+              merchant: snapshot.merchant,
+              categoryId: snapshot.categoryId,
+              spentAt: snapshot.spentAt,
+              note: snapshot.note,
+              imageUri: snapshot.imageUri,
+              rawOcrText: snapshot.rawOcrText,
+            });
+          });
         },
       },
     ]);

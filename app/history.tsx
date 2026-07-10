@@ -1,14 +1,44 @@
+import dayjs from 'dayjs';
 import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Pressable,
+  ScrollView,
+  SectionList,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 
 import { toCsv } from '@/lib/csv';
-import { monthKey, recentMonths } from '@/lib/date';
+import { recentMonths } from '@/lib/date';
 import { formatINR } from '@/lib/money';
 import { exportExpensesCsv } from '@/services/export';
 import { useExpenseStore } from '@/state/expense-store';
 import { layout, mono, paper, type } from '@/theme';
-import type { Category, ExpenseFilter } from '@/types';
+import type { Category, Expense, ExpenseFilter } from '@/types';
+
+interface DaySection {
+  title: string;
+  totalMinor: number;
+  data: Expense[];
+}
+
+function groupByDay(expenses: readonly Expense[]): DaySection[] {
+  const sections = new Map<string, DaySection>();
+  for (const e of expenses) {
+    const key = dayjs(e.spentAt).format('YYYY-MM-DD');
+    let section = sections.get(key);
+    if (!section) {
+      section = { title: dayjs(e.spentAt).format('ddd DD MMM').toUpperCase(), totalMinor: 0, data: [] };
+      sections.set(key, section);
+    }
+    section.totalMinor += e.amountMinor;
+    section.data.push(e);
+  }
+  return [...sections.values()];
+}
 
 const MONTH_COUNT = 6;
 
@@ -129,19 +159,26 @@ export default function HistoryScreen() {
       >
         <Text style={styles.exportButtonText}>Export CSV</Text>
       </Pressable>
-      <FlatList
-        data={expenses}
+      <SectionList
+        sections={useMemo(() => groupByDay(expenses), [expenses])}
         keyExtractor={(e) => String(e.id)}
+        stickySectionHeadersEnabled={false}
         ListEmptyComponent={<Text style={styles.empty}>No matching expenses.</Text>}
+        renderSectionHeader={({ section }) => (
+          <View style={styles.dayHeader}>
+            <Text style={styles.dayTitle}>{section.title}</Text>
+            <Text style={styles.dayTotal}>{formatINR(section.totalMinor)}</Text>
+          </View>
+        )}
         renderItem={({ item }) => (
           <Link href={{ pathname: '/expense/[id]', params: { id: item.id } }} asChild>
             <Pressable style={styles.row}>
-              <View style={styles.rowMain}>
-                <Text style={styles.merchant} numberOfLines={1}>
-                  {(item.merchant ?? 'Unknown').toUpperCase()}
-                </Text>
-                <Text style={styles.date}>{monthKey(item.spentAt)}</Text>
-              </View>
+              <Text style={styles.merchant} numberOfLines={1}>
+                {(item.merchant ?? 'Unknown').toUpperCase()}
+              </Text>
+              <Text style={styles.rowDots} numberOfLines={1}>
+                ............................
+              </Text>
               <Text style={styles.amount}>{formatINR(item.amountMinor)}</Text>
             </Pressable>
           </Link>
@@ -184,17 +221,26 @@ const styles = StyleSheet.create({
     color: paper.inkFaded,
   },
   chipTextSelected: { color: paper.card, fontWeight: '700' },
-  row: {
+  dayHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 13,
-    gap: 8,
+    alignItems: 'baseline',
+    marginTop: 14,
+    paddingBottom: 4,
+    borderBottomWidth: 2,
+    borderBottomColor: paper.ink,
+  },
+  dayTitle: { ...type.label, fontSize: 11, color: paper.ink },
+  dayTotal: { fontFamily: mono, fontSize: 12, fontWeight: '700', color: paper.ink },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    paddingVertical: 11,
+    gap: 6,
     ...layout.tearline,
   },
-  rowMain: { flexShrink: 1 },
-  merchant: { ...type.body, fontWeight: '600' },
-  date: { fontFamily: mono, fontSize: 11, color: paper.inkFaded, marginTop: 2, letterSpacing: 1 },
+  merchant: { ...type.body, fontWeight: '600', flexShrink: 1 },
+  rowDots: { ...type.body, color: paper.inkFaint, flex: 1 },
   amount: { ...type.body, ...type.amount },
   empty: { ...type.label, paddingVertical: 24, textAlign: 'center' },
   exportButton: {
