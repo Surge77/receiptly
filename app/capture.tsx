@@ -6,6 +6,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 
 import { compressForOcr } from '@/services/image';
 import { mlKitOcrService } from '@/services/ocr-service';
+import { mono, paper } from '@/theme';
 
 export default function CaptureScreen() {
   const [permission, requestPermission] = useCameraPermissions();
@@ -92,19 +93,33 @@ function Centered({ children }: { children: React.ReactNode }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16 },
+  container: { flex: 1, backgroundColor: paper.ink },
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    gap: 16,
+    backgroundColor: paper.bg,
+  },
   camera: { flex: 1 },
-  message: { textAlign: 'center', fontSize: 16 },
+  message: { fontFamily: mono, textAlign: 'center', fontSize: 14, color: paper.ink },
   button: {
-    backgroundColor: '#2563EB',
+    backgroundColor: paper.accent,
     marginHorizontal: 16,
     marginTop: 16,
-    borderRadius: 12,
+    borderRadius: 3,
     paddingVertical: 16,
     alignItems: 'center',
   },
-  buttonSecondary: { backgroundColor: '#475569', marginBottom: 16 },
-  buttonDisabled: { opacity: 0.6 },
-  buttonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+  buttonSecondary: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: paper.card, marginBottom: 16 },
+  buttonDisabled: { opacity: 0.5 },
+  buttonText: {
+    fontFamily: mono,
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 13,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+  },
 });

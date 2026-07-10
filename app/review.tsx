@@ -16,6 +16,7 @@ import {
   parsedToInitialForm,
 } from '@/services/expense-draft';
 import { useExpenseStore } from '@/state/expense-store';
+import { layout, mono, paper } from '@/theme';
 
 export default function ReviewScreen() {
   const params = useLocalSearchParams<{ imageUri?: string; rawText?: string }>();
@@ -134,33 +135,58 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, gap: 16 },
+  container: { padding: layout.screenPad, gap: 16, backgroundColor: paper.bg },
   field: { gap: 6 },
-  label: { fontSize: 14, fontWeight: '600', color: '#374151' },
+  label: {
+    fontFamily: mono,
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    color: paper.inkFaded,
+  },
   input: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 10,
+    fontFamily: mono,
+    borderWidth: 1.5,
+    borderColor: paper.ink,
+    borderRadius: 3,
+    backgroundColor: paper.card,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    fontSize: 16,
+    fontSize: 15,
+    color: paper.ink,
   },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#E5E7EB',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 3,
+    borderWidth: 1.5,
+    borderColor: paper.inkFaint,
+    backgroundColor: paper.card,
   },
-  chipText: { color: '#111827', fontWeight: '500' },
-  chipTextActive: { color: '#fff' },
+  chipText: {
+    fontFamily: mono,
+    fontSize: 12,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: paper.ink,
+  },
+  chipTextActive: { color: '#fff', fontWeight: '700' },
   save: {
-    backgroundColor: '#2563EB',
-    borderRadius: 12,
-    paddingVertical: 16,
+    backgroundColor: paper.accent,
+    borderRadius: 3,
+    paddingVertical: 15,
     alignItems: 'center',
     marginTop: 8,
   },
-  saveDisabled: { opacity: 0.5 },
-  saveText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+  saveDisabled: { opacity: 0.4 },
+  saveText: {
+    fontFamily: mono,
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 13,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+  },
 });

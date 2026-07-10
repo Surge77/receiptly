@@ -7,6 +7,7 @@ import { monthKey, recentMonths } from '@/lib/date';
 import { formatINR } from '@/lib/money';
 import { exportExpensesCsv } from '@/services/export';
 import { useExpenseStore } from '@/state/expense-store';
+import { layout, mono, paper, type } from '@/theme';
 import type { Category, ExpenseFilter } from '@/types';
 
 const MONTH_COUNT = 6;
@@ -135,8 +136,10 @@ export default function HistoryScreen() {
         renderItem={({ item }) => (
           <Link href={{ pathname: '/expense/[id]', params: { id: item.id } }} asChild>
             <Pressable style={styles.row}>
-              <View>
-                <Text style={styles.merchant}>{item.merchant ?? 'Unknown'}</Text>
+              <View style={styles.rowMain}>
+                <Text style={styles.merchant} numberOfLines={1}>
+                  {(item.merchant ?? 'Unknown').toUpperCase()}
+                </Text>
                 <Text style={styles.date}>{monthKey(item.spentAt)}</Text>
               </View>
               <Text style={styles.amount}>{formatINR(item.amountMinor)}</Text>
@@ -149,47 +152,65 @@ export default function HistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
+  container: { flex: 1, padding: layout.screenPad, backgroundColor: paper.bg },
   search: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 10,
+    fontFamily: mono,
+    borderWidth: 1.5,
+    borderColor: paper.ink,
+    borderRadius: 3,
+    backgroundColor: paper.card,
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginBottom: 12,
-    fontSize: 16,
+    fontSize: 14,
+    color: paper.ink,
   },
   chipRow: { marginBottom: 12, flexGrow: 0 },
   chipRowContent: { gap: 8, paddingRight: 4 },
   chip: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: paper.inkFaint,
+    borderRadius: 3,
+    backgroundColor: paper.card,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
-  chipSelected: { backgroundColor: '#2563EB', borderColor: '#2563EB' },
-  chipText: { fontSize: 14, color: '#374151' },
-  chipTextSelected: { color: '#FFFFFF', fontWeight: '600' },
+  chipSelected: { backgroundColor: paper.ink, borderColor: paper.ink },
+  chipText: {
+    fontFamily: mono,
+    fontSize: 12,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: paper.inkFaded,
+  },
+  chipTextSelected: { color: paper.card, fontWeight: '700' },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E7EB',
+    paddingVertical: 13,
+    gap: 8,
+    ...layout.tearline,
   },
-  merchant: { fontSize: 16, fontWeight: '500' },
-  date: { fontSize: 13, color: '#9CA3AF', marginTop: 2 },
-  amount: { fontSize: 16, fontWeight: '600' },
-  empty: { color: '#9CA3AF', paddingVertical: 24, textAlign: 'center' },
+  rowMain: { flexShrink: 1 },
+  merchant: { ...type.body, fontWeight: '600' },
+  date: { fontFamily: mono, fontSize: 11, color: paper.inkFaded, marginTop: 2, letterSpacing: 1 },
+  amount: { ...type.body, ...type.amount },
+  empty: { ...type.label, paddingVertical: 24, textAlign: 'center' },
   exportButton: {
-    backgroundColor: '#2563EB',
-    borderRadius: 10,
-    paddingVertical: 10,
+    backgroundColor: paper.ink,
+    borderRadius: 3,
+    paddingVertical: 11,
     marginBottom: 12,
     alignItems: 'center',
   },
-  exportButtonDisabled: { backgroundColor: '#D1D5DB' },
-  exportButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
+  exportButtonDisabled: { opacity: 0.4 },
+  exportButtonText: {
+    fontFamily: mono,
+    color: paper.card,
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+  },
 });

@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useDatabaseSetup } from '@/db/use-database-setup';
+import { mono, paper } from '@/theme';
 
 // Expo Router renders this for any uncaught error in the route tree below.
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
@@ -39,29 +40,50 @@ export default function RootLayout() {
 
   return (
     <>
-      <StatusBar style="auto" />
-      <Stack screenOptions={{ headerTitleStyle: { fontWeight: '600' } }}>
-        <Stack.Screen name="index" options={{ title: 'Receiptly' }} />
-        <Stack.Screen name="capture" options={{ title: 'Capture receipt' }} />
-        <Stack.Screen name="review" options={{ title: 'Review' }} />
-        <Stack.Screen name="history" options={{ title: 'History' }} />
-        <Stack.Screen name="expense/[id]" options={{ title: 'Expense' }} />
-        <Stack.Screen name="edit/[id]" options={{ title: 'Edit expense' }} />
+      <StatusBar style="dark" />
+      <Stack
+        screenOptions={{
+          headerStyle: { backgroundColor: paper.bg },
+          headerShadowVisible: false,
+          headerTintColor: paper.ink,
+          headerTitleStyle: { fontFamily: mono, fontWeight: '700', fontSize: 15 },
+          contentStyle: { backgroundColor: paper.bg },
+        }}
+      >
+        <Stack.Screen name="index" options={{ title: 'RECEIPTLY' }} />
+        <Stack.Screen name="capture" options={{ title: 'CAPTURE' }} />
+        <Stack.Screen name="review" options={{ title: 'REVIEW' }} />
+        <Stack.Screen name="history" options={{ title: 'HISTORY' }} />
+        <Stack.Screen name="expense/[id]" options={{ title: 'EXPENSE' }} />
+        <Stack.Screen name="edit/[id]" options={{ title: 'EDIT' }} />
       </Stack>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  errorTitle: { fontSize: 18, fontWeight: '600', marginBottom: 8 },
-  errorBody: { color: '#6B7280', textAlign: 'center' },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    backgroundColor: paper.bg,
+  },
+  errorTitle: {
+    fontFamily: mono,
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 1,
+    marginBottom: 8,
+    color: paper.ink,
+  },
+  errorBody: { fontFamily: mono, color: paper.inkFaded, textAlign: 'center' },
   retry: {
     marginTop: 16,
-    backgroundColor: '#2563EB',
-    borderRadius: 12,
+    backgroundColor: paper.ink,
+    borderRadius: 3,
     paddingVertical: 12,
     paddingHorizontal: 24,
   },
-  retryText: { color: '#fff', fontWeight: '600' },
+  retryText: { fontFamily: mono, color: paper.card, fontWeight: '700', letterSpacing: 2 },
 });
